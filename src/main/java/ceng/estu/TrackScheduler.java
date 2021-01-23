@@ -66,7 +66,17 @@ public final class TrackScheduler implements AudioLoadResultHandler {
     @Override
     public void playlistLoaded(final AudioPlaylist playlist) {
         // LavaPlayer found multiple AudioTracks from some playlist
-        trackLoaded(playlist.getTracks().get(0));
+        if(playlist.isSearchResult() ){
+            trackLoaded(playlist.getTracks().get(0));
+            return;
+        }
+        //if(playlist.isSearchResult())
+        //else {
+        for(AudioTrack track : playlist.getTracks()){
+            audioPlayStack.push(track);
+        }
+        trackLoaded(audioPlayStack.pop());
+        //}
     }
 
     @Override
