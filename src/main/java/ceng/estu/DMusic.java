@@ -92,7 +92,7 @@ public class DMusic {
 
             final String content = event.getMessage().getContent();
             final List<String> command = Arrays.asList(content.split(" "));
-            if (isLink(command.get(1)) && command.size() == 2) {
+            if (command.get(1).length() > 4 &&isLink(command.get(1)) && command.size() == 2) {
                 isPlaylist = true;
                 playerManager.loadItem(command.get(1), scheduler);
             } else {
