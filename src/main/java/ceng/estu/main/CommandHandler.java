@@ -68,13 +68,16 @@ class CommandHandler {
             }
 
             final String content = event.getMessage().getContent();
-            final List<String> command = Arrays.asList(content.split(" "));
-            if (command.get(1).length() > 4 && isLink(command.get(1)) && command.size() == 2) {
+            final List<String> command = Arrays.asList(content.replace(SYSTEM_PREFIX_PROPERTY+"play","").replace(" ",""));
+
+
+            if (command.get(0).length() > 4 && isLink(command.get(0))) {
                 isPlaylist = true;
-                playerManager.loadItem(command.get(1), scheduler);
+                System.out.println(command.get(0).replace(" ",""));
+                playerManager.loadItem(command.get(0).replace(" ",""), scheduler);
             } else {
                 isPlaylist = false;
-                playerManager.loadItem("ytsearch: " + content.replace(SYSTEM_PREFIX_PROPERTY + "play", ""), scheduler);
+                playerManager.loadItem("ytsearch: " + content.replace(SYSTEM_PREFIX_PROPERTY + "play", "").replaceFirst(" ",""), scheduler);
             }
             try {
                 Thread.sleep(1500);
@@ -149,6 +152,10 @@ class CommandHandler {
         commands.put("setvol", event -> {
             player.setVolume(Integer.parseInt(event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "")));
             event.getMessage().getChannel().block().createMessage("Volume is set to : " + player.getVolume()).block();
+        });
+        commands.put("gvol", event -> {
+
+            event.getMessage().getChannel().block().createMessage(String.valueOf(TrackScheduler.player.getVolume())).block();
         });
         commands.put("mov", event -> {
             player.getPlayingTrack().setPosition(Integer.parseInt(event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "")));
@@ -261,7 +268,7 @@ class CommandHandler {
         commands.put("heykır", event -> {
             SYSTEM_PREFIX_PROPERTY = event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "");
         });
-        commands.put("st", event -> {
+        commands.put("stub", event -> {
             event.getMessage().getChannel().block().createMessage(":\nA sync-tube room has created : " + WebHandler.getSyncTubePage()).block();
 
         });
