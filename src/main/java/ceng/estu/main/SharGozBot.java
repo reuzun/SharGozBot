@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 public class SharGozBot {
 
     protected static final Map<String, Command> commands = new HashMap<>();
-    protected static String SYSTEM_PREFIX_PROPERTY = "!";
+    protected static String SYSTEM_PREFIX_PROPERTY = "\"";
 
     static {
         commands.put("ping", event -> event.getMessage()
@@ -77,27 +77,35 @@ public class SharGozBot {
                 // to finish, it will just execute the results asynchronously.
                 .subscribe(event -> {
                     final String content = event.getMessage().getContent(); // 3.1 Message.getContent() is a String
-                    for (final Map.Entry<String, Command> entry : commands.entrySet()) {
-                        // We will be using ! as our "prefix" to any command in the system.
-                        if (content.startsWith(SYSTEM_PREFIX_PROPERTY + entry.getKey())) {
-                            entry.getValue().execute(event);
-                            break;
-                        } else if (content.contains("${")) {
-                            //String str = content.substring(content.lastIndexOf("$") + 2, content.lastIndexOf("}")); //1444/12
-                            String strToParse = content;
+                    event:
+                    {
+                        for (final Map.Entry<String, Command> entry : commands.entrySet()) {
+                            // We will be using ! as our "prefix" to any command in the system.
+                            if (content.startsWith(SYSTEM_PREFIX_PROPERTY + entry.getKey())) {
+                                entry.getValue().execute(event);
+                                break;
+                            } else if (content.contains("${")) {
 
-                            String regex = "\\$\\{.*?}";
+                                //String str = content.substring(content.lastIndexOf("$") + 2, content.lastIndexOf("}")); //1444/12
+                                String strToParse = content;
 
-                            Pattern pattern = Pattern.compile(regex);
-                            Matcher matcher = pattern.matcher(strToParse);
+                                String regex = "\\$\\{.*?}";
 
-                            StringBuilder sb = new StringBuilder();
-                            sb.append(":\n");
-                            int holder = 0;
-                            while(matcher.find()) {
-                                String str = strToParse.substring(matcher.start(), matcher.end()).replace("${","").replace("}","");
-                                //event.getMessage().getChannel().block().createMessage(":\n"+ (holder++) + ". value : " + String.valueOf(eval(str))).block();
-                                sb.append((holder++) + ". value : " + eval(str) + "\n");
+                                Pattern pattern = Pattern.compile(regex);
+                                Matcher matcher = pattern.matcher(strToParse);
+
+                                StringBuilder sb = new StringBuilder();
+                                sb.append(":\n");
+                                int holder = 0;
+                                while (matcher.find()) {
+                                    String str = strToParse.substring(matcher.start(), matcher.end()).replace("${", "").replace("}", "");
+                                    //event.getMessage().getChannel().block().createMessage(":\n"+ (holder++) + ". value : " + String.valueOf(eval(str))).block();
+                                    try {
+                                        sb.append((holder++) + ". value : " + eval(str) + "\n");
+                                    } catch (Exception e) {
+                                        //if the message includes ${PARAM} but param is invalid. Or situations like not math but that syntax usage.
+                                        break event;
+                                    }
 
 
                                 /*
@@ -120,9 +128,10 @@ public class SharGozBot {
                                 }
                                 */
 
+                                }
+                                event.getMessage().getChannel().block().createMessage(sb.toString()).block();
+                                break;
                             }
-                            event.getMessage().getChannel().block().createMessage(sb.toString()).block();
-                            break;
                         }
                     }
                 });
@@ -151,7 +160,7 @@ public class SharGozBot {
             double parse() {
                 nextChar();
                 double x = parseExpression();
-                if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char)ch);
+                if (pos < str.length()) throw new RuntimeException("Unexpected: " + (char) ch);
                 return x;
             }
 
@@ -163,8 +172,8 @@ public class SharGozBot {
 
             double parseExpression() {
                 double x = parseTerm();
-                for (;;) {
-                    if      (eat('+')) x += parseTerm(); // addition
+                for (; ; ) {
+                    if (eat('+')) x += parseTerm(); // addition
                     else if (eat('-')) x -= parseTerm(); // subtraction
                     else return x;
                 }
@@ -172,8 +181,8 @@ public class SharGozBot {
 
             double parseTerm() {
                 double x = parseFactor();
-                for (;;) {
-                    if      (eat('*')) x *= parseFactor(); // multiplication
+                for (; ; ) {
+                    if (eat('*')) x *= parseFactor(); // multiplication
                     else if (eat('/')) x /= parseFactor(); // division
                     else return x;
                 }
@@ -201,7 +210,7 @@ public class SharGozBot {
                     else if (func.equals("tan")) x = Math.tan(Math.toRadians(x));
                     else throw new RuntimeException("Unknown function: " + func);
                 } else {
-                    throw new RuntimeException("Unexpected: " + (char)ch);
+                    throw new RuntimeException("Unexpected: " + (char) ch);
                 }
 
                 if (eat('^')) x = Math.pow(x, parseFactor()); // exponentiation

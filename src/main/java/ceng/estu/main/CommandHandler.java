@@ -191,12 +191,34 @@ class CommandHandler {
                 }
             //}
         });
+        commands.put("lk",event -> {
+            List<Message> messageList =  event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
+
+            System.out.println("Size is : " + messageList.size());
+            event.getMessage().getChannel().block().createMessage("There is : " + messageList.size() +  " Messages on this channel.").block();
+            event.getMessage().getChannel().block().createMessage("First message is :" + messageList.get(messageList.size()-1).getContent()).block();
+            event.getMessage().getChannel().block().createMessage("Last message is : " + messageList.get(0).getContent()).block();
+        });
         commands.put("help", event -> {
+            String helpStr =
+                    "join          --> joins to channel\n" +
+                    "play          --> plays the music (Youtube link or keywords.)\n"+
+                    "stop,pause    --> pauses the music\n"+
+                    "skip          --> plays next music if exist\n" +
+                    "cont          --> music continues\n" +
+                    "setvol        --> sets the volume.\n" +
+                    "mov           --> moves the song to that millisecond\n" +
+                    "li            --> prints next song list\n" +
+                    "del           --> deletes messages\n" +
+                    "heykır        --> to change prefix\n" +
+                    "st            --> to get a new synctube room\n" +
+                    "lk           --> to get total message count. \n"+
+                            "for any math work ${MATH} use that syntax.";
             StringBuilder sb = new StringBuilder();
-            for(Map.Entry<String, Command> s : commands.entrySet()){
+            /*for(Map.Entry<String, Command> s : commands.entrySet()){
                 sb.append(s.getKey()+"\n");
-            }
-            event.getMessage().getChannel().block().createMessage(":\nCommands:\n"+sb.toString()).block();
+            }*/
+            event.getMessage().getChannel().block().createMessage(":\nCommands:\n"+helpStr).block();
         });
         commands.put("heykır", event -> {
             SYSTEM_PREFIX_PROPERTY = event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "");
