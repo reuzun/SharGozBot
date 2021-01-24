@@ -23,6 +23,10 @@ public final class TrackScheduler implements AudioLoadResultHandler {
 
     public static Stack<AudioTrack> audioPlayStack = new Stack<>();
     public static AudioPlayer player = null;
+    public static boolean isLooped = false;
+
+
+    private AudioTrack lastPlayedSong = null;
 
 
     public TrackScheduler(final AudioPlayer player) {
@@ -32,7 +36,9 @@ public final class TrackScheduler implements AudioLoadResultHandler {
         player.addListener(new AudioEventListener() {
             @Override
             public void onEvent(AudioEvent event) {
-                System.out.println("An event has occured.");
+                if(isLooped){
+                    trackLoaded(lastPlayedSong.makeClone());
+                }
                 if(!audioPlayStack.isEmpty())
                     trackLoaded(audioPlayStack.pop());
                 else
@@ -46,6 +52,8 @@ public final class TrackScheduler implements AudioLoadResultHandler {
         // LavaPlayer found an audio source for us to play
         //list.add(track);
         //if(player.getPlayingTrack() != null)
+
+        lastPlayedSong = track;
 
         if(player.getPlayingTrack() != null){
             audioPlayStack.push(track);
