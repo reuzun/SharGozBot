@@ -13,11 +13,13 @@ import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBu
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.EventDispatcher;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.voice.AudioProvider;
+import reactor.core.scheduler.Schedulers;
 
 
 import java.time.Instant;
@@ -28,10 +30,8 @@ import java.util.*;
  */
 public class SharGozBot {
 
-    private static final Map<String, Command> commands = new HashMap<>();
-    private static String SYSTEM_PREFIX_PROPERTY = "!";
-    static boolean bool = true;
-    static boolean isPlaylist = false;
+    protected static final Map<String, Command> commands = new HashMap<>();
+    protected static String SYSTEM_PREFIX_PROPERTY = "!";
 
     static {
         commands.put("ping", event -> event.getMessage()
@@ -44,7 +44,6 @@ public class SharGozBot {
 
     public static void main(String[] args) {
 
-
         // Creates AudioPlayer instances and translates URLs to AudioTrack instances
         final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
         // This is an optimization strategy that Discord4J can utilize. It is not important to understand
@@ -56,129 +55,14 @@ public class SharGozBot {
         // We will be creating LavaPlayerAudioProvider in the next step
         AudioProvider provider = new LavaPlayerAudioProvider(player);
 
-        commands.put("join", event -> {
-            final Member member = event.getMember().orElse(null);
-            if (member != null) {
-                final VoiceState voiceState = member.getVoiceState().block();
-                if (voiceState != null) {
-                    final VoiceChannel channel = voiceState.getChannel().block();
-                    if (channel != null) {
-                        // join returns a VoiceConnection which would be required if we were
-                        // adding disconnection features, but for now we are just ignoring it.
-                        channel.join(spec -> spec.setProvider(provider)).block();
-                    }
-                }
-            }
-        });
+        CommandHandler.initializeCommands(provider, playerManager, player); //Adjusts the commands from a class in the same package
 
-        final TrackScheduler scheduler = new TrackScheduler(player);
-        commands.put("play", event -> {
-            final Member member = event.getMember().orElse(null);
-            if (member != null) {
-                final VoiceState voiceState = member.getVoiceState().block();
-                if (voiceState != null) {
-                    final VoiceChannel channel = voiceState.getChannel().block();
-                    if (channel != null) {
-                        // join returns a VoiceConnection which would be required if we were
-                        // adding disconnection features, but for now we are just ignoring it.
-                        channel.join(spec -> spec.setProvider(provider)).block();
-                    }
-                }
-            }
-
-            final String content = event.getMessage().getContent();
-            final List<String> command = Arrays.asList(content.split(" "));
-            if (command.get(1).length() > 4 &&isLink(command.get(1)) && command.size() == 2) {
-                isPlaylist = true;
-                playerManager.loadItem(command.get(1), scheduler);
-            } else {
-                isPlaylist = false;
-                playerManager.loadItem("ytsearch: " + content.replace(SYSTEM_PREFIX_PROPERTY + "play", ""), scheduler);
-            }
-            try {
-                Thread.sleep(1500);
-            } catch (Exception e) {
-            }
-
-            if (!bool) {
-                try {
-                    event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.audioPlayStack.peek().getInfo().title +
-                            "\nAuthor of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().author +
-                            "\nDuration of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().length + "ms" +
-                            "\nLink of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().uri).block();
-                } catch (EmptyStackException exe) {
-                    event.getMessage().getChannel().block().createMessage(":\nWe believe that number 2 " +
-                            "is an unlucky number. So we do" +
-                            " not provide information about that" +
-                            "song.").block();
-                }
-            } else {
-                event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.player.getPlayingTrack().getInfo().title +
-                        "\nAuthor of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().author +
-                        "\nDuration of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().length + "ms" +
-                        "\nLink of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().uri).block();
-                bool = false;
-            }
-
-        });
-        commands.put("pause", event -> {
-            player.setPaused(true);
-            event.getMessage().getChannel().block().createMessage("Paused...").block();
-        });
-        commands.put("stop", event -> {
-            player.setPaused(true);
-            event.getMessage().getChannel().block().createMessage("Paused...").block();
-        });
-        commands.put("skip", event -> {
-            if (!TrackScheduler.audioPlayStack.isEmpty()) {
-                TrackScheduler.player.playTrack(TrackScheduler.audioPlayStack.pop());
-                event.getMessage().getChannel().block().createMessage("Next song will be playing ASAP.").block();
-            } else
-                event.getMessage().getChannel().block().createMessage("No Song is available.").block();
-        });
-        commands.put("cont", event -> {
-            player.setPaused(false);
-            event.getMessage().getChannel().block().createMessage("Playing...").block();
-        });
-        commands.put("setvol", event -> {
-            player.setVolume(Integer.parseInt(event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ","")));
-            event.getMessage().getChannel().block().createMessage("Volume is set to : " + player.getVolume()).block();
-        });
-        commands.put("mov", event -> {
-            player.getPlayingTrack().setPosition(Integer.parseInt(event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" " )).replace(" ","")));
-            try{Thread.sleep(150);}catch (Exception e){e.printStackTrace();}
-            event.getMessage().getChannel().block().createMessage("Seeked to : " + player.getPlayingTrack().getPosition()).block();
-        });
-        commands.put("li", event -> {
-            int i = 0;
-            if (!((Stack<AudioTrack>) TrackScheduler.audioPlayStack.clone()).isEmpty())
-                for (AudioTrack t : (Stack<AudioTrack>) TrackScheduler.audioPlayStack.clone())
-                    event.getMessage().getChannel().block().createMessage("\n" + (i++) + ". song : " + t.getInfo().title + " Duration : " + t.getInfo().length + "ms").block();
-            else
-                event.getMessage().getChannel().block().createMessage("No song Left." + player.getVolume()).block();
-        });
-        commands.put("del", event -> {
-            for (int i = 0; i < 100; i++) {
-                //event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).blockFirst().delete().block();
-                event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).next().cache().block().delete().block();
-            }
-        });
-        commands.put("help", event -> {
-            StringBuilder sb = new StringBuilder();
-            for(Map.Entry<String, Command> s : commands.entrySet()){
-                sb.append(s.getKey()+"\n");
-            }
-            event.getMessage().getChannel().block().createMessage(":\nCommands:\n"+sb.toString()).block();
-        });
-        commands.put("heykır", event -> {
-            SYSTEM_PREFIX_PROPERTY = event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "");
-        });
-        commands.put("st", event -> {
-            event.getMessage().getChannel().block().createMessage(":\nA sync-tube room has created : " + WebHandler.getSyncTubePage()).block();
-        });
-
+        EventDispatcher customDispatcher = EventDispatcher.builder()
+                .eventScheduler(Schedulers.boundedElastic())
+                .build();
 
         final GatewayDiscordClient client = DiscordClientBuilder.create(args[0]).build()
+                .gateway().setEventDispatcher(customDispatcher)
                 .login()
                 .block();
 
@@ -237,8 +121,6 @@ public class SharGozBot {
         client.onDisconnect().block();
     }
 
-    private static boolean isLink(String str) {
-        return str.substring(0, 4).equals("http");
-    }
+
 
 }
