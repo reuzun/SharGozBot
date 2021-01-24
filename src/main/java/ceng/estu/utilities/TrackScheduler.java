@@ -1,4 +1,4 @@
-package ceng.estu;
+package ceng.estu.utilities;
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
@@ -21,7 +21,7 @@ public final class TrackScheduler implements AudioLoadResultHandler {
 
     //static ArrayList<AudioTrack> list = new ArrayList<>();
 
-    static Stack<AudioTrack> audioPlayStack = new Stack<>();
+    public static Stack<AudioTrack> audioPlayStack = new Stack<>();
     public static AudioPlayer player = null;
 
 

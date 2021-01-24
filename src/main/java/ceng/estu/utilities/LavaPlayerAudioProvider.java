@@ -1,4 +1,4 @@
-package ceng.estu;
+package ceng.estu.utilities;
 
 import com.sedmelluq.discord.lavaplayer.format.StandardAudioDataFormats;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;

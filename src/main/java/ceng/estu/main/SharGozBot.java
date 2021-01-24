@@ -1,5 +1,9 @@
-package ceng.estu;
+package ceng.estu.main;
 
+import ceng.estu.utilities.Command;
+import ceng.estu.utilities.LavaPlayerAudioProvider;
+import ceng.estu.utilities.TrackScheduler;
+import ceng.estu.webhandle.WebHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -11,26 +15,18 @@ import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
-import discord4j.core.object.entity.GuildEmoji;
 import discord4j.core.object.entity.Member;
-import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.VoiceChannel;
-import discord4j.core.object.reaction.ReactionEmoji;
 import discord4j.voice.AudioProvider;
 
 
-
-import java.sql.SQLOutput;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * @author reuzun
  */
-public class DMusic {
+public class SharGozBot {
 
     private static final Map<String, Command> commands = new HashMap<>();
     private static String SYSTEM_PREFIX_PROPERTY = "!";
@@ -176,6 +172,9 @@ public class DMusic {
         });
         commands.put("heykır", event -> {
             SYSTEM_PREFIX_PROPERTY = event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "");
+        });
+        commands.put("st", event -> {
+            event.getMessage().getChannel().block().createMessage(":\nA sync-tube room has created : " + WebHandler.getSyncTubePage()).block();
         });
 
 

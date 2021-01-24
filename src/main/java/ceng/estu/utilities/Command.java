@@ -1,4 +1,4 @@
-package ceng.estu;
+package ceng.estu.utilities;
 
 import discord4j.core.event.domain.message.MessageCreateEvent;
 
