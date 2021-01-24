@@ -178,6 +178,18 @@ class CommandHandler {
             else
                 event.getMessage().getChannel().block().createMessage("No song Left." + player.getVolume()).block();
         });
+        commands.put("olddel",event -> {
+            List<Message> messageList =  event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
+            System.out.println("Ended");
+
+            System.out.println("Size is : " + messageList.size());
+            event.getMessage().getChannel().block().createMessage("There is : " + messageList.size() +  " Messages on this channel.").block();
+            event.getMessage().getChannel().block().createMessage("First message is :" + messageList.get(messageList.size()-1).getContent()).block();
+            event.getMessage().getChannel().block().createMessage("Last message is : " + messageList.get(0).getContent()).block();
+
+            for(Message m : messageList)
+                m.delete().block();
+        });
         commands.put("del", event -> {
             //for (int i = 0; i < 10; i++) {
             try {
