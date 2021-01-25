@@ -36,7 +36,7 @@ Also it is very gratifying to use your own bot in Discord as a person who spends
 ## How to use the bot ?
   - Prefix is : "
   - Type "help to see command list with short description.
-  ![image](https://user-images.githubusercontent.com/73116832/105747339-b777bf00-5f51-11eb-8bae-82a76a856430.png)
+ ![image](https://user-images.githubusercontent.com/73116832/105748089-b1361280-5f52-11eb-93ea-3cc00b2c2013.png)
  
 ## Used Libraries
 - Jsoup
