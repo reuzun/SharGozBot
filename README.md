@@ -7,6 +7,10 @@ This bot is a simple bot with the following  properties :
 - Create a [sync-tube](https://sync-tube.de/) room. (A platform to watch online videos synchronously).
 - Typing top 9 news from [Eksi Sozluk](https://eksisozluk.com/) (Reddit of Turkey) to the text channel.
 - Calculating the math in the identified syntax in sentences.
+
+eg.
+
+![image](https://user-images.githubusercontent.com/73116832/105742734-efc8ce80-5f4c-11eb-85b2-11e52d290bfc.png)
 ## Motivation
 The motivation at implementing that project was improving skills about using libraries and connecting them together. 
 Also it is very gratifying to use your own bot in Discord as a person who spends lots of time on it.
