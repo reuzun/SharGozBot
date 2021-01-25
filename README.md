@@ -1,5 +1,5 @@
 # SharGozBot :smile:
-[![Github All Releases](https://img.shields.io/github/downloads/reuzun/readme-deneme/total.svg)]()
+[![Github All Releases](https://img.shields.io/github/downloads/reuzun/SharGozBot/total.svg)]()
 
 This bot is a simple bot with the following  properties : 
 - Play music on a voice channel.
