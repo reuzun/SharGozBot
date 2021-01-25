@@ -6,7 +6,7 @@ This bot is a simple bot with the following  properties :
 - Delete messages on a text channel.
 - Create a [sync-tube](https://sync-tube.de/) room. (A platform to watch online videos synchronously).
 - Typing top 9 news from [Eksi Sozluk](https://eksisozluk.com/) (Reddit of Turkey) to the text channel.
-- Calculating the math in the identified syntax in sentences.
+- Calculating the math in the identified syntax in sentences. Syntax is ${Operation}
 
 eg.
 
