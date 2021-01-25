@@ -12,6 +12,7 @@ import discord4j.core.object.entity.Message;
 
 import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
+import discord4j.rest.util.Color;
 import discord4j.voice.AudioProvider;
 
 
@@ -169,32 +170,7 @@ class CommandHandler {
                 m.delete().block();
         });
         commands.put("del", event -> {
-            //for (int i = 0; i < 10; i++) {
             try {
-                  /*  /*List<Message> messageList =  event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
-                    System.out.println("size is : " + messageList.size());
-                    for(int i = 0; i < 15 ; i++){
-                        System.out.println(messageList.get(i).getContent());
-                        messageList.get(i).delete().block();
-                    }
-                     */
-                    /*System.out.println("Started");
-                    List<Message> messageList =  event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
-                    System.out.println("Ended");
-
-                    System.out.println("Size is : " + messageList.size());
-                    event.getMessage().getChannel().block().createMessage("There is : " + messageList.size() +  " Messages on this channel.").block();
-                    event.getMessage().getChannel().block().createMessage("First message is :" + messageList.get(messageList.size()-1).getContent()).block();
-                    event.getMessage().getChannel().block().createMessage("Last message is : " + messageList.get(0).getContent()).block();
-
-                    ListIterator<Message> iter = messageList.listIterator();
-
-                    while(iter.hasNext()){
-                        iter.next().delete().block();
-                    }
-
-                     */
-
                 try {
                     String delStr = event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "");
                     int delCount = Integer.parseInt(delStr);
@@ -217,7 +193,6 @@ class CommandHandler {
                 //do nothing
                 System.out.println("error");
             }
-            //}
         });
         commands.put("lk", event -> {
             List<Message> messageList = event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
@@ -234,6 +209,15 @@ class CommandHandler {
             else
                 event.getMessage().getChannel().block().createMessage("Loop disabled").block();
         });
+        commands.put("fw",event -> {
+            TrackScheduler.player.getPlayingTrack().setPosition(TrackScheduler.player.getPlayingTrack().getPosition()+60000);
+        });
+        commands.put("bw",event -> {
+            TrackScheduler.player.getPlayingTrack().setPosition(TrackScheduler.player.getPlayingTrack().getPosition()-60000);
+        });
+        commands.put("getvol",event -> {
+            event.getMessage().getChannel().block().createMessage("volume is : " + TrackScheduler.player.getVolume()).block();
+        });
         commands.put("help", event -> {
             String helpStr =
                     "join          --> joins to channel\n" +
@@ -242,17 +226,15 @@ class CommandHandler {
                             "skip          --> plays next music if exist\n" +
                             "cont          --> music continues\n" +
                             "setvol        --> sets the volume.\n" +
+                            "getvol        --> gets the volume" +
                             "mov           --> moves the song to that millisecond\n" +
+                            "bw,fw         --> backward or forward for 60000ms" +
                             "li            --> prints next song list\n" +
                             "del           --> deletes messages\n" +
                             "heykır        --> to change prefix\n" +
                             "st            --> to get a new synctube room\n" +
                             "lk           --> to get total message count. \n" +
                             "for any math work ${MATH} use that syntax.";
-            StringBuilder sb = new StringBuilder();
-            /*for(Map.Entry<String, Command> s : commands.entrySet()){
-                sb.append(s.getKey()+"\n");
-            }*/
             event.getMessage().getChannel().block().createMessage(":\nCommands:\n" + helpStr).block();
         });
         commands.put("heykır", event -> {
@@ -260,6 +242,15 @@ class CommandHandler {
         });
         commands.put("stub", event -> {
             event.getMessage().getChannel().block().createMessage(":\nA sync-tube room has created : " + WebHandler.getSyncTubePage()).block();
+
+        });
+        commands.put("eksi", event -> {
+            event.getMessage().getChannel().block().createEmbed(spec ->
+                    //spec.setColor(Color.of((float) Math.random(), (float) Math.random(), (float) Math.random()))
+                    spec.setColor(Color.DARK_GRAY)
+                            .setTitle("Eksi Sözlük Gündem : ")
+                            .setDescription(WebHandler.eksiSozlukGundem())
+            ).block();
 
         });
 
