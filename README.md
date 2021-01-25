@@ -6,7 +6,7 @@ This bot is a simple bot with the following  properties :
 - Delete messages on a text channel.
 - Create a [sync-tube](https://sync-tube.de/) room. (A platform to watch online videos synchronously).
 - Typing top 9 news from [Eksi Sozluk](https://eksisozluk.com/) (Reddit of Turkey) to the text channel.
-- Calculating the math in the identified syntax in sentences. Syntax is ${Operation}
+- Calculating the math in the identified syntax in sentences. Syntax is = ${Math_Operation}.
 
 eg.
 
@@ -14,7 +14,7 @@ eg.
 ## Motivation
 The motivation at implementing that project was improving skills about using libraries and connecting them together. 
 Also it is very gratifying to use your own bot in Discord as a person who spends lots of time on it.
-## How to use it ?
+## How to install it ?
 - Download latest version of JDK from oracle website.
 - Download maven from [here](https://maven.apache.org/).
 - Get a token from discord developer portal.
@@ -32,6 +32,10 @@ Also it is very gratifying to use your own bot in Discord as a person who spends
  - To get clientId go to discord developer portal.
  - To calculate permission number go to bot section in the portal. or you can directly invite your bot as 
  https://discord.com/oauth2/authorize?client_id=YOURCLİENTID&scope=bot (Dont forget to give permission to delete message.).
+ 
+## How to use the bot ?
+  - Prefix is : "
+  - Type "help to see command list with short description.
  
 ## Used Libraries
 - Jsoup
