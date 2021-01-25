@@ -36,13 +36,16 @@ public final class TrackScheduler implements AudioLoadResultHandler {
         player.addListener(new AudioEventListener() {
             @Override
             public void onEvent(AudioEvent event) {
-                if(isLooped){
-                    trackLoaded(lastPlayedSong.makeClone());
-                }
-                if(!audioPlayStack.isEmpty())
-                    trackLoaded(audioPlayStack.pop());
-                else
-                    System.out.println("Stack is emty for listener");
+                if(player.getPlayingTrack() == null) {
+                    if (isLooped) {
+                        trackLoaded(lastPlayedSong.makeClone());
+                    }
+                    if (!audioPlayStack.isEmpty())
+                        trackLoaded(audioPlayStack.pop());
+                    else
+                        System.out.println("Stack is emty for listener");
+                }else
+                    System.out.println("Şarkı bitmemiş :/");
             }
         });
     }
@@ -53,7 +56,8 @@ public final class TrackScheduler implements AudioLoadResultHandler {
         //list.add(track);
         //if(player.getPlayingTrack() != null)
 
-        lastPlayedSong = track;
+        if(!isLooped)
+            lastPlayedSong = track;
 
         if(player.getPlayingTrack() != null){
             audioPlayStack.push(track);
@@ -62,9 +66,6 @@ public final class TrackScheduler implements AudioLoadResultHandler {
 
         player.playTrack(track);
 
-        /*while(player.getPlayingTrack() != null){
-            //do nothing. This for waiting end of song.
-        }*/
 
         if(!audioPlayStack.isEmpty()) {
             trackLoaded(audioPlayStack.pop());

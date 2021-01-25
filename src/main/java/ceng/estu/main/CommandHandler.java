@@ -1,14 +1,11 @@
 package ceng.estu.main;
 
-import ceng.estu.utilities.Command;
 import ceng.estu.utilities.TrackScheduler;
 import ceng.estu.webhandle.WebHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import discord4j.common.util.Snowflake;
-import discord4j.core.event.EventDispatcher;
-import discord4j.core.event.domain.Event;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
@@ -16,15 +13,11 @@ import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.channel.TextChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.voice.AudioProvider;
-import reactor.core.Disposable;
-import reactor.core.scheduler.Scheduler;
-import reactor.core.scheduler.Schedulers;
 
 
 import static ceng.estu.main.SharGozBot.commands;
 import static ceng.estu.main.SharGozBot.SYSTEM_PREFIX_PROPERTY;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
@@ -68,65 +61,49 @@ class CommandHandler {
             }
 
             final String content = event.getMessage().getContent();
-            final List<String> command = Arrays.asList(content.replace(SYSTEM_PREFIX_PROPERTY+"play","").replace(" ",""));
-
+            final List<String> command = Arrays.asList(content.replace(SYSTEM_PREFIX_PROPERTY + "play", "").replace(" ", ""));
 
             if (command.get(0).length() > 4 && isLink(command.get(0))) {
                 isPlaylist = true;
-                System.out.println(command.get(0).replace(" ",""));
-                playerManager.loadItem(command.get(0).replace(" ",""), scheduler);
+                System.out.println(command.get(0).replace(" ", ""));
+                playerManager.loadItem(command.get(0).replace(" ", ""), scheduler);
             } else {
                 isPlaylist = false;
-                playerManager.loadItem("ytsearch: " + content.replace(SYSTEM_PREFIX_PROPERTY + "play", "").replaceFirst(" ",""), scheduler);
+                playerManager.loadItem("ytsearch: " + content.replace(SYSTEM_PREFIX_PROPERTY + "play", "").replaceFirst(" ", ""), scheduler);
             }
+            //First song
             try {
-                Thread.sleep(1500);
-            } catch (Exception e) {
-            }
+                try {
+                    Thread.sleep(1500);
+                } catch (Exception e) {
+                }
 
-            if (!TrackScheduler.audioPlayStack.isEmpty() &&!TrackScheduler.audioPlayStack.peek().getInfo().isStream) {
-                if (!bool) {
+                if (TrackScheduler.audioPlayStack.isEmpty() && TrackScheduler.player.getPlayingTrack() != null) {
 
-                    try {
+                    if (!TrackScheduler.player.getPlayingTrack().getInfo().isStream)
+                        event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.player.getPlayingTrack().getInfo().title +
+                                "\nAuthor of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().author +
+                                "\nDuration of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().length + "ms" +
+                                "\nLink of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().uri).block();
+                    else
+                        event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.player.getPlayingTrack().getInfo().title +
+                                "\nAuthor of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().author +
+                                "\nDuration of Song : " + "Live Stream" +
+                                "\nLink of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().uri).block();
+                } else { //non-first songs.
+                    if (!TrackScheduler.audioPlayStack.peek().getInfo().isStream)
                         event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.audioPlayStack.peek().getInfo().title +
                                 "\nAuthor of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().author +
                                 "\nDuration of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().length + "ms" +
                                 "\nLink of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().uri).block();
-                    } catch (EmptyStackException exe) {
-                        event.getMessage().getChannel().block().createMessage(":\nWe believe that number  " +
-                                "is an unlucky number. So we do" +
-                                " not provide information about that" +
-                                "song.").block();
-                    }
-                } else {
-                    event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.player.getPlayingTrack().getInfo().title +
-                            "\nAuthor of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().author +
-                            "\nDuration of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().length + "ms" +
-                            "\nLink of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().uri).block();
-                    bool = false;
-                }
-            } else {
-                if (!bool) {
-
-                    try {
+                    else
                         event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.audioPlayStack.peek().getInfo().title +
                                 "\nAuthor of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().author +
-                                "\nDuration of Song : " +  "Live Stream" +
+                                "\nDuration of Song : " + "Live Stream" +
                                 "\nLink of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().uri).block();
-                    } catch (EmptyStackException exe) {
-                        event.getMessage().getChannel().block().createMessage(":\nWe believe that number  " +
-                                "is an unlucky number. So we do" +
-                                " not provide information about that" +
-                                "song.").block();
-                    }
-                } else {
-                    event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.player.getPlayingTrack().getInfo().title +
-                            "\nAuthor of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().author +
-                            "\nDuration of Song : " + "Live Stream" +
-                            "\nLink of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().uri).block();
-                    bool = false;
                 }
-
+            } catch (Exception e) {
+                System.out.println("e");
             }
 
         });
@@ -139,6 +116,7 @@ class CommandHandler {
             event.getMessage().getChannel().block().createMessage("Paused...").block();
         });
         commands.put("skip", event -> {
+            TrackScheduler.isLooped = false; //diasble loop
             if (!TrackScheduler.audioPlayStack.isEmpty()) {
                 TrackScheduler.player.playTrack(TrackScheduler.audioPlayStack.pop());
                 event.getMessage().getChannel().block().createMessage("Next song will be playing ASAP.").block();
@@ -170,24 +148,24 @@ class CommandHandler {
             int i = 0;
             if (!((Stack<AudioTrack>) TrackScheduler.audioPlayStack.clone()).isEmpty())
                 for (AudioTrack t : (Stack<AudioTrack>) TrackScheduler.audioPlayStack.clone()) {
-                    if(!t.getInfo().isStream)
+                    if (!t.getInfo().isStream)
                         event.getMessage().getChannel().block().createMessage("\n" + (i++) + ". song : " + t.getInfo().title + " Duration : " + t.getInfo().length + "ms").block();
                     else
-                        event.getMessage().getChannel().block().createMessage("\n" + (i++) + ". song : " + t.getInfo().title + " Duration : " + "Live Stream" ).block();
+                        event.getMessage().getChannel().block().createMessage("\n" + (i++) + ". song : " + t.getInfo().title + " Duration : " + "Live Stream").block();
                 }
             else
                 event.getMessage().getChannel().block().createMessage("No song Left." + player.getVolume()).block();
         });
-        commands.put("olddel",event -> {
-            List<Message> messageList =  event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
+        commands.put("olddel", event -> {
+            List<Message> messageList = event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
             System.out.println("Ended");
 
             System.out.println("Size is : " + messageList.size());
-            event.getMessage().getChannel().block().createMessage("There is : " + messageList.size() +  " Messages on this channel.").block();
-            event.getMessage().getChannel().block().createMessage("First message is :" + messageList.get(messageList.size()-1).getContent()).block();
+            event.getMessage().getChannel().block().createMessage("There is : " + messageList.size() + " Messages on this channel.").block();
+            event.getMessage().getChannel().block().createMessage("First message is :" + messageList.get(messageList.size() - 1).getContent()).block();
             event.getMessage().getChannel().block().createMessage("Last message is : " + messageList.get(0).getContent()).block();
 
-            for(Message m : messageList)
+            for (Message m : messageList)
                 m.delete().block();
         });
         commands.put("del", event -> {
