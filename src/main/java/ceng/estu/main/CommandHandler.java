@@ -233,7 +233,7 @@ class CommandHandler {
                             "del PARAM                  --> deletes messages\n" +
                             "olddel                            --> deletes 2 week older messages slowly.\n" +
                             "heykır PARAM            --> to change prefix\n" +
-                            "st                                    --> to get a new synctube room\n" +
+                            "stub                               --> to get a new synctube room\n" +
                             "lk                                    --> to get total message count. \n" +
                             "eksi                                --> to get turkish news from eksi sozluk\n" +
                             "for any math work ${MATH} use that syntax.";
