@@ -220,20 +220,22 @@ class CommandHandler {
         });
         commands.put("help", event -> {
             String helpStr =
-                    "join          --> joins to channel\n" +
-                            "play          --> plays the music (Youtube link or keywords.)\n" +
-                            "stop,pause    --> pauses the music\n" +
-                            "skip          --> plays next music if exist\n" +
-                            "cont          --> music continues\n" +
-                            "setvol        --> sets the volume.\n" +
-                            "getvol        --> gets the volume" +
-                            "mov           --> moves the song to that millisecond\n" +
-                            "bw,fw         --> backward or forward for 60000ms" +
-                            "li            --> prints next song list\n" +
-                            "del           --> deletes messages\n" +
-                            "heykır        --> to change prefix\n" +
-                            "st            --> to get a new synctube room\n" +
-                            "lk           --> to get total message count. \n" +
+                            "join                                 --> joins to channel\n" +
+                            "play PARAM                --> plays the music (Youtube link or keywords.)\n" +
+                            "stop,pause                    --> pauses the music\n" +
+                            "skip                                 --> plays next music if exist\n" +
+                            "cont                                --> music continues\n" +
+                            "setvol PARAM             --> sets the volume.\n" +
+                            "getvol                             --> gets the volume\n" +
+                            "mov PARAM(in ms)   --> moves the song to that millisecond\n" +
+                            "bw,fw                             --> backward or forward for 60000ms\n" +
+                            "li                                      --> prints next song list\n" +
+                            "del PARAM                  --> deletes messages\n" +
+                            "olddel                            --> deletes 2 week older messages slowly.\n" +
+                            "heykır PARAM            --> to change prefix\n" +
+                            "st                                    --> to get a new synctube room\n" +
+                            "lk                                    --> to get total message count. \n" +
+                            "eksi                                --> to get turkish news from eksi sozluk\n" +
                             "for any math work ${MATH} use that syntax.";
             event.getMessage().getChannel().block().createMessage(":\nCommands:\n" + helpStr).block();
         });
