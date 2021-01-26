@@ -5,6 +5,7 @@ import ceng.estu.utilities.Command;
 import ceng.estu.utilities.LavaPlayerAudioProvider;
 import ceng.estu.utilities.TrackScheduler;
 import ceng.estu.webhandle.WebHandler;
+import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
@@ -19,6 +20,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.VoiceChannel;
+import discord4j.rest.util.Color;
 import discord4j.voice.AudioProvider;
 import reactor.core.scheduler.Schedulers;
 
@@ -26,6 +28,9 @@ import reactor.core.scheduler.Schedulers;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
+import java.io.File;
+import java.net.MalformedURLException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -40,9 +45,18 @@ public class SharGozBot {
     protected static String SYSTEM_PREFIX_PROPERTY = "\"";
 
     static {
+        commands.put("mem", event -> {
+            event.getMessage().getChannel().block().createEmbed(spec -> {
+                //spec.setColor(Color.of((float) Math.random(), (float) Math.random(), (float) Math.random()))
+                spec.setColor(Color.DARK_GRAY)
+                        //.setTitle("1:")
+                        .setImage("https://user-images.githubusercontent.com/73116832/105819532-5986be00-5fc9-11eb-9dc5-9a784d2f7147.png");
+            }).block();
+        });
         commands.put("ping", event -> event.getMessage()
                 .getChannel().block()
-                .createMessage("Your ping is calculated as 49ms.").block());
+                .createMessage("Your ping is calculated as 49ms.").block().delete().delaySubscription(Duration.ofMillis(500)).block() //example usage of deletion ofter typing 500ms
+        );
         commands.put("deniz senin kardeşin", event -> event.getMessage()
                 .getChannel().block()
                 .createMessage("baba yalan söylüyorsun bu olamaz nayır.").block());
@@ -54,6 +68,7 @@ public class SharGozBot {
         final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
         // This is an optimization strategy that Discord4J can utilize. It is not important to understand
         playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
+        playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.LOW);
         // Allow playerManager to parse remote sources like YouTube links
         AudioSourceManagers.registerRemoteSources(playerManager);
         // Create an AudioPlayer so Discord4J can receive audio data

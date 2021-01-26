@@ -19,13 +19,9 @@ import java.util.Stack;
  */
 public final class TrackScheduler implements AudioLoadResultHandler {
 
-    //static ArrayList<AudioTrack> list = new ArrayList<>();
-
     public static Stack<AudioTrack> audioPlayStack = new Stack<>();
     public static AudioPlayer player = null;
     public static boolean isLooped = false;
-
-
     private AudioTrack lastPlayedSong = null;
 
 
@@ -45,7 +41,7 @@ public final class TrackScheduler implements AudioLoadResultHandler {
                     else
                         System.out.println("Stack is emty for listener");
                 }else
-                    System.out.println("Şarkı bitmemiş :/");
+                    System.out.print("");//do nothing
             }
         });
     }
