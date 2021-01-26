@@ -1,5 +1,6 @@
 package ceng.estu.main;
 
+import ceng.estu.filehandler.FileHandler;
 import ceng.estu.utilities.Calculator;
 import ceng.estu.utilities.Command;
 import ceng.estu.utilities.LavaPlayerAudioProvider;
@@ -29,6 +30,7 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.time.Duration;
 import java.time.Instant;
@@ -68,7 +70,6 @@ public class SharGozBot {
         final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
         // This is an optimization strategy that Discord4J can utilize. It is not important to understand
         playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
-        playerManager.getConfiguration().setResamplingQuality(AudioConfiguration.ResamplingQuality.LOW);
         // Allow playerManager to parse remote sources like YouTube links
         AudioSourceManagers.registerRemoteSources(playerManager);
         // Create an AudioPlayer so Discord4J can receive audio data
@@ -86,6 +87,7 @@ public class SharGozBot {
                 .gateway().setEventDispatcher(customDispatcher)
                 .login()
                 .block();
+        FileHandler.handleMap();
 
         client.getEventDispatcher().on(MessageCreateEvent.class)
                 // subscribe is like block, in that it will *request* for action
@@ -98,7 +100,11 @@ public class SharGozBot {
                         for (final Map.Entry<String, Command> entry : commands.entrySet()) {
                             // We will be using ! as our "prefix" to any command in the system.
                             if (content.startsWith(SYSTEM_PREFIX_PROPERTY + entry.getKey())) {
-                                entry.getValue().execute(event);
+                                try {
+                                    entry.getValue().execute(event);
+                                } catch (FileNotFoundException e) {
+                                    e.printStackTrace();
+                                }
                                 break;
                             } else if (content.contains("${")) {
 
