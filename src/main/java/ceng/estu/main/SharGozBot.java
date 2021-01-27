@@ -19,11 +19,15 @@ import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.EventDispatcher;
 import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
+import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.channel.Channel;
+import discord4j.core.object.entity.channel.GuildChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.core.object.presence.Presence;
 import discord4j.rest.util.Color;
 import discord4j.voice.AudioProvider;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
 
@@ -88,6 +92,21 @@ public class SharGozBot {
         FileHandler.handleMap();
 
         client.updatePresence(Presence.doNotDisturb()).block(); //offline bot
+
+
+        System.out.println("********************************************");
+        Mono<Long> guildCount = client.getGuilds().count();
+        System.out.println("Bot is available in "+guildCount.block() + " server."); //Bot is online(server count)
+
+
+        int totalMemberCount = 0;
+        List<Guild> guildList = client.getGuilds().collectList().block();
+        for(Guild g : guildList){
+            totalMemberCount += g.getMembers().count().block();
+        }
+        System.out.println("Bot is serving to "+ totalMemberCount+ " people.");
+        System.out.println("********************************************");
+
 
         client.getEventDispatcher().on(MessageCreateEvent.class)
                 // subscribe is like block, in that it will *request* for action
