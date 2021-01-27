@@ -21,6 +21,7 @@ import discord4j.core.event.domain.message.MessageCreateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.VoiceChannel;
+import discord4j.core.object.presence.Presence;
 import discord4j.rest.util.Color;
 import discord4j.voice.AudioProvider;
 import reactor.core.scheduler.Schedulers;
@@ -72,12 +73,9 @@ public class SharGozBot {
         playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
         // Allow playerManager to parse remote sources like YouTube links
         AudioSourceManagers.registerRemoteSources(playerManager);
-        // Create an AudioPlayer so Discord4J can receive audio data
-        final AudioPlayer player = playerManager.createPlayer();
-        // We will be creating LavaPlayerAudioProvider in the next step
-        AudioProvider provider = new LavaPlayerAudioProvider(player);
 
-        CommandHandler.initializeCommands(provider, playerManager, player); //Adjusts the commands from a class in the same package
+
+        CommandHandler.initializeCommands(playerManager); //Adjusts the commands from a class in the same package
 
         EventDispatcher customDispatcher = EventDispatcher.builder()
                 .eventScheduler(Schedulers.boundedElastic())
@@ -88,6 +86,8 @@ public class SharGozBot {
                 .login()
                 .block();
         FileHandler.handleMap();
+
+        client.updatePresence(Presence.doNotDisturb()).block(); //offline bot
 
         client.getEventDispatcher().on(MessageCreateEvent.class)
                 // subscribe is like block, in that it will *request* for action

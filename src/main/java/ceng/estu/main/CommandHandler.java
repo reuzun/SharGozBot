@@ -1,11 +1,15 @@
 package ceng.estu.main;
 
 import ceng.estu.filehandler.FileHandler;
+import ceng.estu.utilities.LavaPlayerAudioProvider;
 import ceng.estu.utilities.TrackScheduler;
 import ceng.estu.webhandle.WebHandler;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
+import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
+import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 import discord4j.common.util.Snowflake;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Member;
@@ -35,10 +39,17 @@ class CommandHandler {
     //static String musicRoomId = null;
     static boolean isPlaylist = false;
 
-    protected static void initializeCommands(AudioProvider provider, AudioPlayerManager playerManager, AudioPlayer player) {
+    public  static Stack<AudioTrack> audioPlayStack;
+    public  static boolean isLooped;
+    public static AudioPlayer player;
+    public static TrackScheduler scheduler;
 
-        final TrackScheduler scheduler = new TrackScheduler(player);
-        commands.put("play", event -> {
+    protected static void initializeCommands(AudioPlayerManager playerManager) {
+
+
+
+
+        commands.put("join", event -> {
             final Member member = event.getMember().orElse(null);
             if (member != null) {
                 final VoiceState voiceState = member.getVoiceState().block();
@@ -47,9 +58,36 @@ class CommandHandler {
                     if (channel != null) {
                         // join returns a VoiceConnection which would be required if we were
                         // adding disconnection features, but for now we are just ignoring it.
-                        channel.join(spec -> spec.setProvider(provider)).block();
+                        String guildId = event.getGuildId().get().asString();
+                        channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
                     }
                 }
+            }
+
+        }
+
+        );
+
+
+        commands.put("play", event -> {
+            try {
+                setup(event.getGuildId().get().asString());
+            }catch (Exception e){
+                //did not join before play
+                final Member member = event.getMember().orElse(null);
+                if (member != null) {
+                    final VoiceState voiceState = member.getVoiceState().block();
+                    if (voiceState != null) {
+                        final VoiceChannel channel = voiceState.getChannel().block();
+                        if (channel != null) {
+                            // join returns a VoiceConnection which would be required if we were
+                            // adding disconnection features, but for now we are just ignoring it.
+                            String guildId = event.getGuildId().get().asString();
+                            channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
+                        }
+                    }
+                }
+                setup(event.getGuildId().get().asString());
             }
 
             final String content = event.getMessage().getContent();
@@ -73,54 +111,54 @@ class CommandHandler {
                 String str = FileHandler.map.get(event.getGuildId().get().asString());
 
                 if (str == null) {
-                    if (TrackScheduler.audioPlayStack.isEmpty() && TrackScheduler.player.getPlayingTrack() != null) {
+                    if (audioPlayStack.isEmpty() && player.getPlayingTrack() != null) {
 
-                        if (!TrackScheduler.player.getPlayingTrack().getInfo().isStream)
-                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.player.getPlayingTrack().getInfo().title +
-                                    "\nAuthor of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().author +
-                                    "\nDuration of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().length + "ms" +
-                                    "\nLink of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().uri).block();
+                        if (!player.getPlayingTrack().getInfo().isStream)
+                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
+                                    "\nAuthor of Song : " + player.getPlayingTrack().getInfo().author +
+                                    "\nDuration of Song : " + player.getPlayingTrack().getInfo().length + "ms" +
+                                    "\nLink of Song : " + player.getPlayingTrack().getInfo().uri).block();
                         else
-                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.player.getPlayingTrack().getInfo().title +
-                                    "\nAuthor of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().author +
+                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
+                                    "\nAuthor of Song : " + player.getPlayingTrack().getInfo().author +
                                     "\nDuration of Song : " + "Live Stream" +
-                                    "\nLink of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().uri).block();
+                                    "\nLink of Song : " + player.getPlayingTrack().getInfo().uri).block();
                     } else { //non-first songs.
-                        if (!TrackScheduler.audioPlayStack.peek().getInfo().isStream)
-                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.audioPlayStack.peek().getInfo().title +
-                                    "\nAuthor of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().author +
-                                    "\nDuration of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().length + "ms" +
-                                    "\nLink of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().uri).block();
+                        if (!audioPlayStack.peek().getInfo().isStream)
+                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
+                                    "\nAuthor of Song : " + audioPlayStack.peek().getInfo().author +
+                                    "\nDuration of Song : " + audioPlayStack.peek().getInfo().length + "ms" +
+                                    "\nLink of Song : " + audioPlayStack.peek().getInfo().uri).block();
                         else
-                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + TrackScheduler.audioPlayStack.peek().getInfo().title +
-                                    "\nAuthor of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().author +
+                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
+                                    "\nAuthor of Song : " + audioPlayStack.peek().getInfo().author +
                                     "\nDuration of Song : " + "Live Stream" +
-                                    "\nLink of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().uri).block();
+                                    "\nLink of Song : " + audioPlayStack.peek().getInfo().uri).block();
                     }
                 } else {
-                    if (TrackScheduler.audioPlayStack.isEmpty() && TrackScheduler.player.getPlayingTrack() != null) {
+                    if (audioPlayStack.isEmpty() && player.getPlayingTrack() != null) {
 
-                        if (!TrackScheduler.player.getPlayingTrack().getInfo().isStream)
-                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + TrackScheduler.player.getPlayingTrack().getInfo().title +
-                                    "\nAuthor of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().author +
-                                    "\nDuration of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().length + "ms" +
-                                    "\nLink of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().uri).block();
+                        if (!player.getPlayingTrack().getInfo().isStream)
+                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
+                                    "\nAuthor of Song : " + player.getPlayingTrack().getInfo().author +
+                                    "\nDuration of Song : " + player.getPlayingTrack().getInfo().length + "ms" +
+                                    "\nLink of Song : " + player.getPlayingTrack().getInfo().uri).block();
                         else
-                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + TrackScheduler.player.getPlayingTrack().getInfo().title +
-                                    "\nAuthor of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().author +
+                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
+                                    "\nAuthor of Song : " + player.getPlayingTrack().getInfo().author +
                                     "\nDuration of Song : " + "Live Stream" +
-                                    "\nLink of Song : " + TrackScheduler.player.getPlayingTrack().getInfo().uri).block();
+                                    "\nLink of Song : " + player.getPlayingTrack().getInfo().uri).block();
                     } else { //non-first songs.
-                        if (!TrackScheduler.audioPlayStack.peek().getInfo().isStream)
-                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + TrackScheduler.audioPlayStack.peek().getInfo().title +
-                                    "\nAuthor of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().author +
-                                    "\nDuration of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().length + "ms" +
-                                    "\nLink of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().uri).block();
+                        if (!audioPlayStack.peek().getInfo().isStream)
+                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
+                                    "\nAuthor of Song : " + audioPlayStack.peek().getInfo().author +
+                                    "\nDuration of Song : " + audioPlayStack.peek().getInfo().length + "ms" +
+                                    "\nLink of Song : " + audioPlayStack.peek().getInfo().uri).block();
                         else
-                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + TrackScheduler.audioPlayStack.peek().getInfo().title +
-                                    "\nAuthor of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().author +
+                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
+                                    "\nAuthor of Song : " + audioPlayStack.peek().getInfo().author +
                                     "\nDuration of Song : " + "Live Stream" +
-                                    "\nLink of Song : " + TrackScheduler.audioPlayStack.peek().getInfo().uri).block();
+                                    "\nLink of Song : " + audioPlayStack.peek().getInfo().uri).block();
                     }
 
                 }
@@ -130,34 +168,41 @@ class CommandHandler {
 
         });
         commands.put("pause", event -> {
+            setup(event.getGuildId().get().asString());
             player.setPaused(true);
             event.getMessage().getChannel().block().createMessage("Paused...").block();
         });
         commands.put("stop", event -> {
+            setup(event.getGuildId().get().asString());
             player.setPaused(true);
             event.getMessage().getChannel().block().createMessage("Paused...").block();
         });
         commands.put("skip", event -> {
-            TrackScheduler.isLooped = false; //diasble loop
-            if (!TrackScheduler.audioPlayStack.isEmpty()) {
-                TrackScheduler.player.playTrack(TrackScheduler.audioPlayStack.pop());
+            setup(event.getGuildId().get().asString());
+            CommandHandler.scheduler.setLooped(false);
+            if (!audioPlayStack.isEmpty()) {
+                CommandHandler.scheduler.setLastPlayedSong(audioPlayStack.peek());
+                player.playTrack(audioPlayStack.pop());
                 event.getMessage().getChannel().block().createMessage("Next song will be playing ASAP.").block();
             } else
                 event.getMessage().getChannel().block().createMessage("No Song is available.").block();
         });
         commands.put("cont", event -> {
+            setup(event.getGuildId().get().asString());
             player.setPaused(false);
             event.getMessage().getChannel().block().createMessage("Playing...").block();
         });
         commands.put("setvol", event -> {
+            setup(event.getGuildId().get().asString());
             player.setVolume(Integer.parseInt(event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "")));
             event.getMessage().getChannel().block().createMessage("Volume is set to : " + player.getVolume()).block();
         });
         commands.put("gvol", event -> {
-
-            event.getMessage().getChannel().block().createMessage(String.valueOf(TrackScheduler.player.getVolume())).block();
+            setup(event.getGuildId().get().asString());
+            event.getMessage().getChannel().block().createMessage(String.valueOf(player.getVolume())).block();
         });
         commands.put("mov", event -> {
+            setup(event.getGuildId().get().asString());
             player.getPlayingTrack().setPosition(Integer.parseInt(event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "")));
             try {
                 Thread.sleep(225);
@@ -167,10 +212,11 @@ class CommandHandler {
             event.getMessage().getChannel().block().createMessage("Seeked to : " + player.getPlayingTrack().getPosition()).block();
         });
         commands.put("li", event -> {
+            setup(event.getGuildId().get().asString());
             int i = 0;
-            if (!((Stack<AudioTrack>) TrackScheduler.audioPlayStack.clone()).isEmpty()) {
+            if (!((Stack<AudioTrack>) audioPlayStack.clone()).isEmpty()) {
                 StringBuilder sb = new StringBuilder(":");
-                for (AudioTrack t : (Stack<AudioTrack>) TrackScheduler.audioPlayStack.clone()) {
+                for (AudioTrack t : (Stack<AudioTrack>) audioPlayStack.clone()) {
                     if (!t.getInfo().isStream)
                         sb.append("\n" + (i++) + ". song : " + t.getInfo().title + " Duration : " + t.getInfo().length + "ms");
                     else
@@ -226,20 +272,29 @@ class CommandHandler {
             event.getMessage().getChannel().block().createMessage("Last message is : " + messageList.get(0).getContent()).block();
         });
         commands.put("lp", event -> {
-            TrackScheduler.isLooped = !TrackScheduler.isLooped;
-            if (TrackScheduler.isLooped)
+            setup(event.getGuildId().get().asString());
+
+            CommandHandler.scheduler.setLooped(!CommandHandler.scheduler.isLooped());
+            if (CommandHandler.scheduler.isLooped())
                 event.getMessage().getChannel().block().createMessage("Loop enabled").block();
             else
                 event.getMessage().getChannel().block().createMessage("Loop disabled").block();
+
+
+           // System.out.println("loop is disabled for a short time");
+          //  event.getMessage().getChannel().block().createMessage("loop is disabled for a short time").block();
         });
         commands.put("fw", event -> {
-            TrackScheduler.player.getPlayingTrack().setPosition(TrackScheduler.player.getPlayingTrack().getPosition() + 60000);
+            setup(event.getGuildId().get().asString());
+            player.getPlayingTrack().setPosition(player.getPlayingTrack().getPosition() + 60000);
         });
         commands.put("bw", event -> {
-            TrackScheduler.player.getPlayingTrack().setPosition(TrackScheduler.player.getPlayingTrack().getPosition() - 60000);
+            setup(event.getGuildId().get().asString());
+            player.getPlayingTrack().setPosition(player.getPlayingTrack().getPosition() - 60000);
         });
         commands.put("getvol", event -> {
-            event.getMessage().getChannel().block().createMessage("volume is : " + TrackScheduler.player.getVolume()).block();
+            setup(event.getGuildId().get().asString());
+            event.getMessage().getChannel().block().createMessage("volume is : " + player.getVolume()).block();
         });
         commands.put("help", event -> {
             String helpStr =
@@ -299,5 +354,29 @@ class CommandHandler {
         return str.substring(0, 4).equals("http");
     }
 
+    private static AudioProvider getProvider(String guildId){
+        // Creates AudioPlayer instances and translates URLs to AudioTrack instances
+        final AudioPlayerManager playerManager = new DefaultAudioPlayerManager();
+        // This is an optimization strategy that Discord4J can utilize. It is not important to understand
+        playerManager.getConfiguration().setFrameBufferFactory(NonAllocatingAudioFrameBuffer::new);
+        // Allow playerManager to parse remote sources like YouTube links
+        AudioSourceManagers.registerRemoteSources(playerManager);
+        // Create an AudioPlayer so Discord4J can receive audio data
+        final AudioPlayer player = playerManager.createPlayer();
+        final TrackScheduler ts = new TrackScheduler(player);
+
+        PlayerSchedulerHolder.put(guildId, player, ts);
+        // We will be creating LavaPlayerAudioProvider in the next step
+        AudioProvider provider = new LavaPlayerAudioProvider(player);
+        return provider;
+    }
+
+    private static void setup(String guildId){
+        PlayerSchedulerHolder holder = PlayerSchedulerHolder.guildToPlayerMap.get(guildId);
+        CommandHandler.player = holder.getPlayer();
+        CommandHandler.scheduler = holder.getScheduler();
+        CommandHandler.audioPlayStack = scheduler.audioPlayStack;
+        CommandHandler.isLooped = scheduler.isLooped();
+    }
 
 }

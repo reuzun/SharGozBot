@@ -19,9 +19,27 @@ import java.util.Stack;
  */
 public final class TrackScheduler implements AudioLoadResultHandler {
 
-    public static Stack<AudioTrack> audioPlayStack = new Stack<>();
-    public static AudioPlayer player = null;
-    public static boolean isLooped = false;
+    public  Stack<AudioTrack> audioPlayStack = new Stack<>();
+    public  AudioPlayer player = null;
+
+    public boolean isLooped() {
+        return isLooped;
+    }
+
+    public void setLooped(boolean looped) {
+        isLooped = looped;
+    }
+
+    private boolean isLooped = false;
+
+    public AudioTrack getLastPlayedSong() {
+        return lastPlayedSong;
+    }
+
+    public void setLastPlayedSong(AudioTrack lastPlayedSong) {
+        this.lastPlayedSong = lastPlayedSong;
+    }
+
     private AudioTrack lastPlayedSong = null;
 
 
