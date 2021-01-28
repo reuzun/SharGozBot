@@ -5,6 +5,7 @@ ceng\estu\webhandle\WebUtililities$2.class
 ceng\estu\main\CommandHandler.class
 ceng\estu\main\PlayerSchedulerHolder.class
 ceng\estu\filehandler\FileHandler.class
+ceng\estu\secret\Tokens.class
 ceng\estu\webhandle\WebUtililities$3.class
 ceng\estu\utilities\Command.class
 ceng\estu\utilities\Calculator.class
