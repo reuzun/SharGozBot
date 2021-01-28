@@ -12,6 +12,7 @@ import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 import discord4j.common.util.Snowflake;
 import discord4j.core.object.VoiceState;
+import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
 
@@ -21,6 +22,7 @@ import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.rest.util.Color;
 import discord4j.voice.AudioProvider;
 import org.apache.bcel.classfile.ExceptionTable;
+import reactor.core.publisher.Mono;
 
 
 import static ceng.estu.main.SharGozBot.commands;
@@ -170,12 +172,12 @@ class CommandHandler {
         commands.put("pause", event -> {
             setup(event.getGuildId().get().asString());
             player.setPaused(true);
-            event.getMessage().getChannel().block().createMessage("Paused...").block();
+            event.getMessage().getChannel().block().createMessage("Paused...").block().delete().delaySubscription(Duration.ofMillis(3500)).block();
         });
         commands.put("stop", event -> {
             setup(event.getGuildId().get().asString());
             player.setPaused(true);
-            event.getMessage().getChannel().block().createMessage("Paused...").block();
+            event.getMessage().getChannel().block().createMessage("Paused...").block().delete().delaySubscription(Duration.ofMillis(3500)).block();
         });
         commands.put("skip", event -> {
             setup(event.getGuildId().get().asString());
@@ -183,23 +185,23 @@ class CommandHandler {
             if (!audioPlayStack.isEmpty()) {
                 CommandHandler.scheduler.setLastPlayedSong(audioPlayStack.peek());
                 player.playTrack(audioPlayStack.pop());
-                event.getMessage().getChannel().block().createMessage("Next song will be playing ASAP.").block();
+                event.getMessage().getChannel().block().createMessage("Next song will be playing ASAP.").block().delete().delaySubscription(Duration.ofMillis(3500)).block();
             } else
-                event.getMessage().getChannel().block().createMessage("No Song is available.").block();
+                event.getMessage().getChannel().block().createMessage("No Song is available.").block().delete().delaySubscription(Duration.ofMillis(3500)).block();
         });
         commands.put("cont", event -> {
             setup(event.getGuildId().get().asString());
             player.setPaused(false);
-            event.getMessage().getChannel().block().createMessage("Playing...").block();
+            event.getMessage().getChannel().block().createMessage("Playing...").block().delete().delaySubscription(Duration.ofMillis(3500)).block();
         });
         commands.put("setvol", event -> {
             setup(event.getGuildId().get().asString());
             player.setVolume(Integer.parseInt(event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "")));
-            event.getMessage().getChannel().block().createMessage("Volume is set to : " + player.getVolume()).block();
+            event.getMessage().getChannel().block().createMessage("Volume is set to : " + player.getVolume()).block().delete().delaySubscription(Duration.ofMillis(3500)).block();
         });
         commands.put("gvol", event -> {
             setup(event.getGuildId().get().asString());
-            event.getMessage().getChannel().block().createMessage(String.valueOf(player.getVolume())).block();
+            event.getMessage().getChannel().block().createMessage(String.valueOf(player.getVolume())).block().delete().delaySubscription(Duration.ofMillis(3500)).block();
         });
         commands.put("mov", event -> {
             setup(event.getGuildId().get().asString());
@@ -209,7 +211,7 @@ class CommandHandler {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            event.getMessage().getChannel().block().createMessage("Seeked to : " + player.getPlayingTrack().getPosition()).block();
+            event.getMessage().getChannel().block().createMessage("Seeked to : " + player.getPlayingTrack().getPosition()).block().delete().delaySubscription(Duration.ofMillis(3500)).block();
         });
         commands.put("li", event -> {
             setup(event.getGuildId().get().asString());
@@ -227,7 +229,7 @@ class CommandHandler {
                 event.getMessage().getChannel().block().createMessage("No song Left." + player.getVolume()).block();
         });
         commands.put("olddel", event -> {
-            List<Message> messageList = event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
+            /*List<Message> messageList = event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
             System.out.println("Ended");
 
             System.out.println("Size is : " + messageList.size());
@@ -236,7 +238,8 @@ class CommandHandler {
             event.getMessage().getChannel().block().createMessage("Last message is : " + messageList.get(0).getContent()).block();
 
             for (Message m : messageList)
-                m.delete().block();
+                m.delete().block();*/
+            //deprecated.
         });
         commands.put("del", event -> {
             try {
@@ -294,11 +297,11 @@ class CommandHandler {
         });
         commands.put("getvol", event -> {
             setup(event.getGuildId().get().asString());
-            event.getMessage().getChannel().block().createMessage("volume is : " + player.getVolume()).block();
+            event.getMessage().getChannel().block().createMessage("volume is : " + player.getVolume()).block().delete().delaySubscription(Duration.ofMillis(3500)).block();
         });
         commands.put("help", event -> {
             String helpStr =
-                    "mroom PARAM          --> sets the music room\n" +
+                    "mroom                          --> sets the music room\n" +
                             "play PARAM                --> plays the music (Youtube link or keywords.)\n" +
                             "stop,pause                    --> pauses the music\n" +
                             "skip                                 --> plays next music if exist\n" +
@@ -309,18 +312,20 @@ class CommandHandler {
                             "bw,fw                             --> backward or forward for 60000ms\n" +
                             "li                                      --> prints next song list\n" +
                             "del PARAM                  --> deletes messages\n" +
-                            "olddel                            --> deletes 2 week older messages slowly.\n" +
-                            "heykır PARAM            --> to change prefix\n" +
-                            "stub                               --> to get a new synctube room\n" +
+                            //"olddel                            --> deletes 2 week older messages slowly.\n" +
+                            //"prefix PARAM            --> to change prefix\n" + //further updates.
+                            "gtube                              --> to get a new synctube room\n" +
                             "lk                                    --> to get total message count. \n" +
                             "eksi                                --> to get turkish news from eksi sozluk\n" +
                             "for any math work ${MATH} use that syntax.";
             event.getMessage().getChannel().block().createMessage(":\nCommands:\n" + helpStr).block();
         });
-        commands.put("heykır", event -> {
-            SYSTEM_PREFIX_PROPERTY = event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "");
+        commands.put("prefix", event -> {
+            /*SYSTEM_PREFIX_PROPERTY = event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "");
+            event.getMessage().getChannel().block().createMessage("done.").block().delete().delaySubscription(Duration.ofMillis(3500)).block();*/
+            //further updates.
         });
-        commands.put("stub", event -> {
+        commands.put("gtube", event -> {
             event.getMessage().getChannel().block().createMessage(":\nA sync-tube room has created : " + WebHandler.getSyncTubePage()).block();
 
         });
@@ -331,11 +336,8 @@ class CommandHandler {
                             .setTitle("Eksi Sözlük Gündem : ")
                             .setDescription(WebHandler.eksiSozlukGundem())
             ).block();
-            /**
-             //further updates.
-             System.out.println(event.getMessage().getChannel().block().getId().asString()); //getting music chanells id
-             event.getClient().getChannelById(Snowflake.of("803329049526796298")).block().getRestChannel().createMessage("asd").block(); //adjusting to text there.
-             */
+
+
         });
         commands.put("mroom", event -> {
             //musicRoomId = event.getMessage().getChannel().block().getId().asString();
@@ -346,6 +348,24 @@ class CommandHandler {
             try {
                 FileHandler.writeToFile(event.getGuildId().get().asString(), event.getMessage().getChannel().block().getId().asString());
             }catch (Exception e){}
+            event.getMessage().getChannel().block().createMessage("music room done.").block();
+        });
+        commands.put("status", event -> {
+            event.getMessage().getChannel().block().createMessage("********************************************").block();
+            Mono<Long> guildCount = event.getClient().getGuilds().count();
+            event.getMessage().getChannel().block().createMessage("Bot is available in "+guildCount.block() + " server.").block(); //Bot is online(server count)
+
+
+            int totalMemberCount = 0;
+            List<Guild> guildList = event.getClient().getGuilds().collectList().block();
+            for(Guild g : guildList){
+                totalMemberCount += g.getMembers().count().block();
+            }
+            event.getMessage().getChannel().block().createMessage("Bot is serving to "+ totalMemberCount+ " people.").block();
+            event.getMessage().getChannel().block().createMessage("********************************************").block();
+        });
+        commands.put("lyrics", event -> {
+            //further updates.
         });
 
     }

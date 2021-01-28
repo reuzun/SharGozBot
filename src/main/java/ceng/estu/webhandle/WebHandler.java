@@ -2,13 +2,14 @@ package ceng.estu.webhandle;
 
 import com.gargoylesoftware.htmlunit.CookieManager;
 import com.gargoylesoftware.htmlunit.WebClient;
-import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.gargoylesoftware.htmlunit.html.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
+import java.util.StringTokenizer;
 
 /**
  * @author reuzun
@@ -66,5 +67,14 @@ public class WebHandler {
         }
         return sb.toString();
     }
+
+    public static String getLyrics(String trackTitle) throws IOException {
+        //further updates
+        return null;
+    }
+
+    /*public static void main(String[] args) throws IOException {
+        System.out.println(getLyrics("gripin ebruli"));
+    }*/
 
 }

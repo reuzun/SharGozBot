@@ -62,8 +62,11 @@ public class SharGozBot {
         });
         commands.put("ping", event -> event.getMessage()
                 .getChannel().block()
-                .createMessage("Your ping is calculated as 49ms.").block().delete().delaySubscription(Duration.ofMillis(500)).block() //example usage of deletion ofter typing 500ms
-        );
+                .createMessage(
+                        "Latency: " +
+                                event.getMessage().getClient().getGatewayClient(0).get().getResponseTime().toMillis() +
+                                "ms")
+                .block());
         commands.put("deniz senin kardeşin", event -> event.getMessage()
                 .getChannel().block()
                 .createMessage("baba yalan söylüyorsun bu olamaz nayır.").block());
