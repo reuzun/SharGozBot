@@ -226,7 +226,7 @@ class CommandHandler {
                 }
                 event.getMessage().getChannel().block().createMessage(sb.toString()).block().delete().delaySubscription(Duration.ofMillis(3500)).block();
             } else
-                event.getMessage().getChannel().block().createMessage("No song Left." + player.getVolume()).block();
+                event.getMessage().getChannel().block().createMessage("No song Left.").block().delete().delaySubscription(Duration.ofMillis(3500)).block();
         });
         commands.put("olddel", event -> {
             /*List<Message> messageList = event.getMessage().getChannel().block().getMessagesBefore(Snowflake.of(Instant.now())).collectList().block();
