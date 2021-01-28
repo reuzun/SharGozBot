@@ -14,7 +14,7 @@ public class Tokens {
         return this.bot_Token;
     }
 
-    private Tokens(){
+    public Tokens(){
         //cant instantiate
     }
 }
