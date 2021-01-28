@@ -13,4 +13,8 @@ public class Tokens {
     public String getBot_Token(){
         return this.bot_Token;
     }
+
+    private Tokens(){
+        //cant instantiate
+    }
 }
