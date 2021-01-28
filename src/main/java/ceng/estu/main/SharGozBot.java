@@ -1,6 +1,7 @@
 package ceng.estu.main;
 
 import ceng.estu.filehandler.FileHandler;
+import ceng.estu.secret.Tokens;
 import ceng.estu.utilities.Calculator;
 import ceng.estu.utilities.Command;
 import ceng.estu.utilities.LavaPlayerAudioProvider;
@@ -88,7 +89,7 @@ public class SharGozBot {
                 .eventScheduler(Schedulers.boundedElastic())
                 .build();
 
-        final GatewayDiscordClient client = DiscordClientBuilder.create(args[0]).build()
+        final GatewayDiscordClient client = DiscordClientBuilder.create(new Tokens().getBot_Token()).build()
                 .gateway().setEventDispatcher(customDispatcher)
                 .login()
                 .block();
