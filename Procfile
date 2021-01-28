@@ -1,1 +1,1 @@
-worker: java -jar target/shargozbot.jar
+Worker: java -jar target/shargozbot.jar
