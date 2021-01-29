@@ -382,6 +382,7 @@ class CommandHandler {
         });
         commands.put("help", event -> {
             String helpStr =
+                    "qroom                           --> Sets quote room. Posts quote everyday.\n"+
                     "mroom                          --> sets the music room\n" +
                             "play PARAM                --> plays the music (Youtube link or keywords.)\n" +
                             "stop,pause                    --> pauses the music\n" +
