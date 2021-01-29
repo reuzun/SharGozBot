@@ -63,8 +63,33 @@ class CommandHandler {
                         // join returns a VoiceConnection which would be required if we were
                         // adding disconnection features, but for now we are just ignoring it.
                         String guildId = event2.getGuildId().get().asString();
-                       //channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
-                        final var onDisconnect = channel.join(spec -> spec.setProvider(getProvider(guildId)))
+                       channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
+                       channel.getVoiceConnection() .flatMap(connection -> {
+                           // The bot itself has a VoiceState; 1 VoiceState signals bot is alone
+                           final Publisher<Boolean> voiceStateCounter = channel.getVoiceStates()
+                                   .count()
+                                   .map(count -> 1L == count);
+
+                           // After 10 seconds, check if the bot is alone. This is useful if
+                           // the bot joined alone, but no one else joined since connecting
+                           final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(30L))
+                                   .filterWhen(ignored -> voiceStateCounter)
+                                   .switchIfEmpty(Mono.never())
+                                   .then();
+
+                           // As people join and leave `channel`, check if the bot is alone.
+                           // Note the first filter is not strictly necessary, but it does prevent many unnecessary cache calls
+                           final Mono<Void> onEvent = channel.getClient().getEventDispatcher().on(VoiceStateUpdateEvent.class)
+                                   .filter(event -> event.getOld().flatMap(VoiceState::getChannelId).map(channel.getId()::equals).orElse(false))
+                                   .delayElements(Duration.ofMillis(22500))
+                                   .filterWhen(ignored -> voiceStateCounter)
+                                   .next()
+                                   .then();
+
+                           // Disconnect the bot if either onDelay or onEvent are completed!
+                           return Mono.first(onDelay, onEvent).then(connection.disconnect());
+                       }).subscribe();
+                        /*final var onDisconnect = channel.join(spec -> spec.setProvider(getProvider(guildId)))
                                 .flatMap(connection -> {
                                     // The bot itself has a VoiceState; 1 VoiceState signals bot is alone
                                     final Publisher<Boolean> voiceStateCounter = channel.getVoiceStates()
@@ -73,7 +98,7 @@ class CommandHandler {
 
                                     // After 10 seconds, check if the bot is alone. This is useful if
                                     // the bot joined alone, but no one else joined since connecting
-                                    final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(10L))
+                                    final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(20L))
                                             .filterWhen(ignored -> voiceStateCounter)
                                             .switchIfEmpty(Mono.never())
                                             .then();
@@ -87,8 +112,9 @@ class CommandHandler {
                                             .then();
 
                                     // Disconnect the bot if either onDelay or onEvent are completed!
-                                    return Mono.first(onDelay, onEvent).delaySubscription(Duration.ofMillis(2500)).then(connection.disconnect());
-                                }).block();
+                                    return Mono.first(onDelay, onEvent).delaySubscription(Duration.ofMillis(1250)).then(connection.disconnect());
+                                });
+                        onDisconnect.subscribe();*/
 
                     }
                 }
@@ -113,38 +139,38 @@ class CommandHandler {
                             // join returns a VoiceConnection which would be required if we were
                             // adding disconnection features, but for now we are just ignoring it.
                             String guildId = event2.getGuildId().get().asString();
-                            //channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
-                            final var onDisconnect = channel.join(spec -> spec.setProvider(getProvider(guildId)))
-                                    .flatMap(connection -> {
-                                        // The bot itself has a VoiceState; 1 VoiceState signals bot is alone
-                                        final Publisher<Boolean> voiceStateCounter = channel.getVoiceStates()
-                                                .count()
-                                                .map(count -> 1L == count);
+                            channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
+                            channel.getVoiceConnection() .flatMap(connection -> {
+                                // The bot itself has a VoiceState; 1 VoiceState signals bot is alone
+                                final Publisher<Boolean> voiceStateCounter = channel.getVoiceStates()
+                                        .count()
+                                        .map(count -> 1L == count);
 
-                                        // After 10 seconds, check if the bot is alone. This is useful if
-                                        // the bot joined alone, but no one else joined since connecting
-                                        final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(10L))
-                                                .filterWhen(ignored -> voiceStateCounter)
-                                                .switchIfEmpty(Mono.never())
-                                                .then();
+                                // After 10 seconds, check if the bot is alone. This is useful if
+                                // the bot joined alone, but no one else joined since connecting
+                                final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(30L))
+                                        .filterWhen(ignored -> voiceStateCounter)
+                                        .switchIfEmpty(Mono.never())
+                                        .then();
 
-                                        // As people join and leave `channel`, check if the bot is alone.
-                                        // Note the first filter is not strictly necessary, but it does prevent many unnecessary cache calls
-                                        final Mono<Void> onEvent = channel.getClient().getEventDispatcher().on(VoiceStateUpdateEvent.class)
-                                                .filter(event -> event.getOld().flatMap(VoiceState::getChannelId).map(channel.getId()::equals).orElse(false))
-                                                .filterWhen(ignored -> voiceStateCounter)
-                                                .next()
-                                                .then();
+                                // As people join and leave `channel`, check if the bot is alone.
+                                // Note the first filter is not strictly necessary, but it does prevent many unnecessary cache calls
+                                final Mono<Void> onEvent = channel.getClient().getEventDispatcher().on(VoiceStateUpdateEvent.class)
+                                        .filter(event -> event.getOld().flatMap(VoiceState::getChannelId).map(channel.getId()::equals).orElse(false))
+                                        .delayElements(Duration.ofMillis(22500))
+                                        .filterWhen(ignored -> voiceStateCounter)
+                                        .next()
+                                        .then();
 
-                                        // Disconnect the bot if either onDelay or onEvent are completed!
-                                        return Mono.first(onDelay, onEvent).then(connection.disconnect());
-                                    }).block();
+                                // Disconnect the bot if either onDelay or onEvent are completed!
+                                return Mono.first(onDelay, onEvent).then(connection.disconnect());
+                            }).subscribe();
                         }
                     }
                 }
                 setup(event2.getGuildId().get().asString());
             }
-
+            setup(event2.getGuildId().get().asString());
             final String content = event2.getMessage().getContent();
             final List<String> command = Arrays.asList(content.replace(SYSTEM_PREFIX_PROPERTY + "play", "").replace(" ", ""));
 
@@ -219,6 +245,7 @@ class CommandHandler {
                 }
             } catch (Exception e) {
                 System.out.println("e");
+                e.printStackTrace();
             }
 
         });

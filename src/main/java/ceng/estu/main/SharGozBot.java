@@ -26,7 +26,9 @@ import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.channel.Channel;
 import discord4j.core.object.entity.channel.GuildChannel;
 import discord4j.core.object.entity.channel.VoiceChannel;
+import discord4j.core.object.presence.Activity;
 import discord4j.core.object.presence.Presence;
+import discord4j.discordjson.json.gateway.StatusUpdate;
 import discord4j.rest.util.Color;
 import discord4j.voice.AudioProvider;
 import org.reactivestreams.Publisher;
@@ -93,11 +95,14 @@ public class SharGozBot {
 
         final GatewayDiscordClient client = DiscordClientBuilder.create(new Tokens().getBot_Token()).build()
                 .gateway().setEventDispatcher(customDispatcher)
+                .setInitialStatus(it -> Presence.doNotDisturb(Activity.playing("type \"help to get commands")))
                 .login()
                 .block();
         FileHandler.handleMap();
 
-        client.updatePresence(Presence.doNotDisturb()).block(); //offline bot
+        //client.updatePresence(Presence.online(Activity.playing("something"))).block();
+
+        //client.updatePresence(Presence.doNotDisturb()).block(); //offline bot
 
 
         System.out.println("********************************************");
@@ -166,5 +171,6 @@ public class SharGozBot {
                 });
 
         client.onDisconnect().block();
+
     }
 }
