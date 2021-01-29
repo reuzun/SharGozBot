@@ -39,6 +39,7 @@ This bot is a discord bot with ability to play songs, delete messages, setting m
 - HtmlUnit
 - Discord4j
 - LavaPlayer
+
 Thank them all who has contributed to that amazing projects
 
 ## Licence
