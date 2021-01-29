@@ -11,6 +11,7 @@ import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
 import discord4j.common.util.Snowflake;
+import discord4j.core.event.domain.VoiceStateUpdateEvent;
 import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
@@ -22,6 +23,7 @@ import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.rest.util.Color;
 import discord4j.voice.AudioProvider;
 import org.apache.bcel.classfile.ExceptionTable;
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 
@@ -51,8 +53,8 @@ class CommandHandler {
 
 
 
-        commands.put("join", event -> {
-            final Member member = event.getMember().orElse(null);
+        commands.put("join", event2 -> {
+            final Member member = event2.getMember().orElse(null);
             if (member != null) {
                 final VoiceState voiceState = member.getVoiceState().block();
                 if (voiceState != null) {
@@ -60,8 +62,34 @@ class CommandHandler {
                     if (channel != null) {
                         // join returns a VoiceConnection which would be required if we were
                         // adding disconnection features, but for now we are just ignoring it.
-                        String guildId = event.getGuildId().get().asString();
-                        channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
+                        String guildId = event2.getGuildId().get().asString();
+                       //channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
+                        final var onDisconnect = channel.join(spec -> spec.setProvider(getProvider(guildId)))
+                                .flatMap(connection -> {
+                                    // The bot itself has a VoiceState; 1 VoiceState signals bot is alone
+                                    final Publisher<Boolean> voiceStateCounter = channel.getVoiceStates()
+                                            .count()
+                                            .map(count -> 1L == count);
+
+                                    // After 10 seconds, check if the bot is alone. This is useful if
+                                    // the bot joined alone, but no one else joined since connecting
+                                    final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(10L))
+                                            .filterWhen(ignored -> voiceStateCounter)
+                                            .switchIfEmpty(Mono.never())
+                                            .then();
+
+                                    // As people join and leave `channel`, check if the bot is alone.
+                                    // Note the first filter is not strictly necessary, but it does prevent many unnecessary cache calls
+                                    final Mono<Void> onEvent = channel.getClient().getEventDispatcher().on(VoiceStateUpdateEvent.class)
+                                            .filter(event -> event.getOld().flatMap(VoiceState::getChannelId).map(channel.getId()::equals).orElse(false))
+                                            .filterWhen(ignored -> voiceStateCounter)
+                                            .next()
+                                            .then();
+
+                                    // Disconnect the bot if either onDelay or onEvent are completed!
+                                    return Mono.first(onDelay, onEvent).delaySubscription(Duration.ofMillis(2500)).then(connection.disconnect());
+                                }).block();
+
                     }
                 }
             }
@@ -71,12 +99,12 @@ class CommandHandler {
         );
 
 
-        commands.put("play", event -> {
+        commands.put("play", event2 -> {
             try {
-                setup(event.getGuildId().get().asString());
+                setup(event2.getGuildId().get().asString());
             }catch (Exception e){
                 //did not join before play
-                final Member member = event.getMember().orElse(null);
+                final Member member = event2.getMember().orElse(null);
                 if (member != null) {
                     final VoiceState voiceState = member.getVoiceState().block();
                     if (voiceState != null) {
@@ -84,15 +112,40 @@ class CommandHandler {
                         if (channel != null) {
                             // join returns a VoiceConnection which would be required if we were
                             // adding disconnection features, but for now we are just ignoring it.
-                            String guildId = event.getGuildId().get().asString();
-                            channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
+                            String guildId = event2.getGuildId().get().asString();
+                            //channel.join(spec -> spec.setProvider(getProvider(guildId))).block();
+                            final var onDisconnect = channel.join(spec -> spec.setProvider(getProvider(guildId)))
+                                    .flatMap(connection -> {
+                                        // The bot itself has a VoiceState; 1 VoiceState signals bot is alone
+                                        final Publisher<Boolean> voiceStateCounter = channel.getVoiceStates()
+                                                .count()
+                                                .map(count -> 1L == count);
+
+                                        // After 10 seconds, check if the bot is alone. This is useful if
+                                        // the bot joined alone, but no one else joined since connecting
+                                        final Mono<Void> onDelay = Mono.delay(Duration.ofSeconds(10L))
+                                                .filterWhen(ignored -> voiceStateCounter)
+                                                .switchIfEmpty(Mono.never())
+                                                .then();
+
+                                        // As people join and leave `channel`, check if the bot is alone.
+                                        // Note the first filter is not strictly necessary, but it does prevent many unnecessary cache calls
+                                        final Mono<Void> onEvent = channel.getClient().getEventDispatcher().on(VoiceStateUpdateEvent.class)
+                                                .filter(event -> event.getOld().flatMap(VoiceState::getChannelId).map(channel.getId()::equals).orElse(false))
+                                                .filterWhen(ignored -> voiceStateCounter)
+                                                .next()
+                                                .then();
+
+                                        // Disconnect the bot if either onDelay or onEvent are completed!
+                                        return Mono.first(onDelay, onEvent).then(connection.disconnect());
+                                    }).block();
                         }
                     }
                 }
-                setup(event.getGuildId().get().asString());
+                setup(event2.getGuildId().get().asString());
             }
 
-            final String content = event.getMessage().getContent();
+            final String content = event2.getMessage().getContent();
             final List<String> command = Arrays.asList(content.replace(SYSTEM_PREFIX_PROPERTY + "play", "").replace(" ", ""));
 
             if (command.get(0).length() > 4 && isLink(command.get(0))) {
@@ -110,29 +163,29 @@ class CommandHandler {
                 } catch (Exception e) {
                 }
 
-                String str = FileHandler.map.get(event.getGuildId().get().asString());
+                String str = FileHandler.map.get(event2.getGuildId().get().asString());
 
                 if (str == null) {
                     if (audioPlayStack.isEmpty() && player.getPlayingTrack() != null) {
 
                         if (!player.getPlayingTrack().getInfo().isStream)
-                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
+                            event2.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
                                     "\nAuthor of Song : " + player.getPlayingTrack().getInfo().author +
                                     "\nDuration of Song : " + player.getPlayingTrack().getInfo().length + "ms" +
                                     "\nLink of Song : " + player.getPlayingTrack().getInfo().uri).block();
                         else
-                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
+                            event2.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
                                     "\nAuthor of Song : " + player.getPlayingTrack().getInfo().author +
                                     "\nDuration of Song : " + "Live Stream" +
                                     "\nLink of Song : " + player.getPlayingTrack().getInfo().uri).block();
                     } else { //non-first songs.
                         if (!audioPlayStack.peek().getInfo().isStream)
-                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
+                            event2.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
                                     "\nAuthor of Song : " + audioPlayStack.peek().getInfo().author +
                                     "\nDuration of Song : " + audioPlayStack.peek().getInfo().length + "ms" +
                                     "\nLink of Song : " + audioPlayStack.peek().getInfo().uri).block();
                         else
-                            event.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
+                            event2.getMessage().getChannel().block().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
                                     "\nAuthor of Song : " + audioPlayStack.peek().getInfo().author +
                                     "\nDuration of Song : " + "Live Stream" +
                                     "\nLink of Song : " + audioPlayStack.peek().getInfo().uri).block();
@@ -141,23 +194,23 @@ class CommandHandler {
                     if (audioPlayStack.isEmpty() && player.getPlayingTrack() != null) {
 
                         if (!player.getPlayingTrack().getInfo().isStream)
-                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
+                            event2.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
                                     "\nAuthor of Song : " + player.getPlayingTrack().getInfo().author +
                                     "\nDuration of Song : " + player.getPlayingTrack().getInfo().length + "ms" +
                                     "\nLink of Song : " + player.getPlayingTrack().getInfo().uri).block();
                         else
-                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
+                            event2.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + player.getPlayingTrack().getInfo().title +
                                     "\nAuthor of Song : " + player.getPlayingTrack().getInfo().author +
                                     "\nDuration of Song : " + "Live Stream" +
                                     "\nLink of Song : " + player.getPlayingTrack().getInfo().uri).block();
                     } else { //non-first songs.
                         if (!audioPlayStack.peek().getInfo().isStream)
-                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
+                            event2.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
                                     "\nAuthor of Song : " + audioPlayStack.peek().getInfo().author +
                                     "\nDuration of Song : " + audioPlayStack.peek().getInfo().length + "ms" +
                                     "\nLink of Song : " + audioPlayStack.peek().getInfo().uri).block();
                         else
-                            event.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
+                            event2.getClient().getChannelById(Snowflake.of(str)).block().getRestChannel().createMessage(":\nPlaying song is : " + audioPlayStack.peek().getInfo().title +
                                     "\nAuthor of Song : " + audioPlayStack.peek().getInfo().author +
                                     "\nDuration of Song : " + "Live Stream" +
                                     "\nLink of Song : " + audioPlayStack.peek().getInfo().uri).block();
