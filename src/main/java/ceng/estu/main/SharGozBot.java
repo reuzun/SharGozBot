@@ -130,6 +130,9 @@ public class SharGozBot {
                                 } catch (FileNotFoundException e) {
                                     //e.printStackTrace();
                                     System.out.println("An error has occurred.");
+                                } catch (Exception e){
+                                    System.out.println("An error has occurred.");
+                                    e.printStackTrace();
                                 }
                                 break;
                             } else if (content.contains("${")) {
