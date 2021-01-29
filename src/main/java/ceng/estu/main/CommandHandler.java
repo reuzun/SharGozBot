@@ -31,6 +31,7 @@ import static ceng.estu.main.SharGozBot.commands;
 import static ceng.estu.main.SharGozBot.SYSTEM_PREFIX_PROPERTY;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -444,8 +445,30 @@ class CommandHandler {
             event.getMessage().getChannel().block().createMessage("Bot is serving to "+ totalMemberCount+ " people.").block();
             event.getMessage().getChannel().block().createMessage("********************************************").block();
         });
-        commands.put("lyrics", event -> {
-            //further updates.
+        commands.put("qroom", event -> {
+
+            Timer timer = new Timer ();
+            TimerTask t = new TimerTask () {
+                @Override
+                public void run () {
+                    event.getMessage().getChannel().block().createEmbed(spec ->
+                    {
+                        try {
+                            String str = WebHandler.getRandomQuote();
+                            String quote = str.substring(0,str.lastIndexOf("-")-2);
+                            String author = str.substring(str.lastIndexOf("-"),str.length());
+                            spec.setColor(Color.RED)
+                                    .setDescription(quote)
+                                    .setFooter(author,null)
+                                    .setTimestamp(Instant.now());
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }).block();
+                }
+            };
+
+            timer.schedule (t, 0l, 1000*60*60*24);
         });
 
     }

@@ -3,12 +3,15 @@ package ceng.estu.webhandle;
 import com.gargoylesoftware.htmlunit.CookieManager;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.*;
+import com.gargoylesoftware.htmlunit.javascript.host.html.HTMLTextAreaElement;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import reactor.util.annotation.NonNull;
 
 import java.io.IOException;
+import java.lang.module.ModuleDescriptor;
 import java.util.StringTokenizer;
 
 /**
@@ -48,33 +51,53 @@ public class WebHandler {
         StringBuilder sb = new StringBuilder();
 
         int lastNumber = 0;
-        for(int i = 1 ; i < 14 ; i++) {
+        for (int i = 1; i < 14; i++) {
             lastNumber++;
-            Elements elements = doc.select("#partial-index > ul > li:nth-child("+ i + ")");
-            for(Element e : elements) {
+            Elements elements = doc.select("#partial-index > ul > li:nth-child(" + i + ")");
+            for (Element e : elements) {
                 Element linkTag = e.getElementsByTag("a").first();
                 String url = "";
                 try {
-                     url = linkTag.absUrl("href");
-                }catch (Exception ex){
+                    url = linkTag.absUrl("href");
+                } catch (Exception ex) {
                     lastNumber--;
                     continue;
                 }
 
-                sb.append(lastNumber+ "-" + url+"\n\n");
+                sb.append(lastNumber + "-" + url + "\n\n");
 
             }
         }
         return sb.toString();
     }
 
-    public static String getLyrics(String trackTitle) throws IOException {
-        //further updates
-        return null;
+    public static String getRandomQuote() throws IOException {
+        webClient.getCookieManager().setCookiesEnabled(true);
+
+        String quote = null;
+
+        HtmlPage page = null;
+        try {
+            page = webClient.getPage("https://miniwebtool.com/random-quote-generator/");
+        } catch (Exception e) {
+            System.out.println("Page not found.");
+        }
+
+
+
+        HtmlSubmitInput btn = page.getFirstByXPath("/html/body/div[7]/div[1]/div[7]/div/form/table/tbody/tr[2]/td/input");
+
+        page = btn.click();
+
+        DomText web_Quote = page.getFirstByXPath("/html/body/div[7]/div[1]/div[8]/div[4]/div[1]/div/div[1]/text()");
+        HtmlAnchor web_Author = page.getFirstByXPath("/html/body/div[7]/div[1]/div[8]/div[4]/div[1]/div/div[2]/a");
+
+        quote = web_Quote + " ---" +web_Author.getTextContent();
+
+        return quote;
     }
 
     /*public static void main(String[] args) throws IOException {
-        System.out.println(getLyrics("gripin ebruli"));
+        System.out.println(getRandomQuote());
     }*/
-
 }
