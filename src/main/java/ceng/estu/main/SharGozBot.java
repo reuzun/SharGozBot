@@ -1,37 +1,21 @@
 package ceng.estu.main;
 
 import ceng.estu.filehandler.FileHandler;
-import ceng.estu.secret.Tokens;
+
 import ceng.estu.utilities.Calculator;
 import ceng.estu.utilities.Command;
-import ceng.estu.utilities.LavaPlayerAudioProvider;
-import ceng.estu.utilities.TrackScheduler;
-import ceng.estu.webhandle.WebHandler;
-import com.sedmelluq.discord.lavaplayer.player.AudioConfiguration;
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer;
 import com.sedmelluq.discord.lavaplayer.player.AudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import com.sedmelluq.discord.lavaplayer.track.playback.NonAllocatingAudioFrameBuffer;
-import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.EventDispatcher;
-import discord4j.core.event.domain.VoiceStateUpdateEvent;
 import discord4j.core.event.domain.message.MessageCreateEvent;
-import discord4j.core.object.VoiceState;
 import discord4j.core.object.entity.Guild;
-import discord4j.core.object.entity.Member;
-import discord4j.core.object.entity.channel.Channel;
-import discord4j.core.object.entity.channel.GuildChannel;
-import discord4j.core.object.entity.channel.VoiceChannel;
 import discord4j.core.object.presence.Activity;
 import discord4j.core.object.presence.Presence;
-import discord4j.discordjson.json.gateway.StatusUpdate;
 import discord4j.rest.util.Color;
-import discord4j.voice.AudioProvider;
-import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
@@ -93,11 +77,18 @@ public class SharGozBot {
                 .eventScheduler(Schedulers.boundedElastic())
                 .build();
 
-        final GatewayDiscordClient client = DiscordClientBuilder.create(new Tokens().getBot_Token()).build()
-                .gateway().setEventDispatcher(customDispatcher)
-                .setInitialStatus(it -> Presence.doNotDisturb(Activity.playing("type \"help to get commands")))
-                .login()
-                .block();
+        GatewayDiscordClient client = null;
+
+        if(args.length == 1){
+            client = DiscordClientBuilder.create(args[0]).build()
+                    .gateway().setEventDispatcher(customDispatcher)
+                    .setInitialStatus(it -> Presence.doNotDisturb(Activity.playing("type \"help to get commands")))
+                    .login()
+                    .block();
+        }else{
+            System.out.println("There is an error about program parameters.");
+            System.exit(-1);
+        }
         FileHandler.handleMap();
 
         //client.updatePresence(Presence.online(Activity.playing("something"))).block();

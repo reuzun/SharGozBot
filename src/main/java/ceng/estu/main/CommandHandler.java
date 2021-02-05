@@ -394,31 +394,13 @@ class CommandHandler {
                             "bw,fw                             --> backward or forward for 60000ms\n" +
                             "li                                      --> prints next song list\n" +
                             "del PARAM                  --> deletes messages\n" +
-                            //"olddel                            --> deletes 2 week older messages slowly.\n" +
-                            //"prefix PARAM            --> to change prefix\n" + //further updates.
                             "gtube                              --> to get a new synctube room\n" +
                             "lk                                    --> to get total message count. \n" +
-                            "eksi                                --> to get turkish news from eksi sozluk\n" +
                             "for any math work ${MATH} use that syntax.";
             event.getMessage().getChannel().block().createMessage(":\nCommands:\n" + helpStr).block();
         });
-        commands.put("prefix", event -> {
-            /*SYSTEM_PREFIX_PROPERTY = event.getMessage().getContent().substring(event.getMessage().getContent().lastIndexOf(" ")).replace(" ", "");
-            event.getMessage().getChannel().block().createMessage("done.").block().delete().delaySubscription(Duration.ofMillis(3500)).block();*/
-            //further updates.
-        });
         commands.put("gtube", event -> {
             event.getMessage().getChannel().block().createMessage(":\nA sync-tube room has created : " + WebHandler.getSyncTubePage()).block();
-
-        });
-        commands.put("eksi", event -> {
-            event.getMessage().getChannel().block().createEmbed(spec ->
-                    //spec.setColor(Color.of((float) Math.random(), (float) Math.random(), (float) Math.random()))
-                    spec.setColor(Color.DARK_GRAY)
-                            .setTitle("Eksi Sözlük Gündem : ")
-                            .setDescription(WebHandler.eksiSozlukGundem())
-            ).block();
-
 
         });
         commands.put("mroom", event -> {
