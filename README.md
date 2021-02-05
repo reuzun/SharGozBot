@@ -7,15 +7,13 @@ This bot is a discord bot with ability to play songs, delete messages, setting m
 - Setting a music channel to let main channel to be clean.
 - Setting a quote channel to post random quote (Credit:[here](https://miniwebtool.com/random-quote-generator/)) for every 24 hour.
 - Create a [sync-tube](https://sync-tube.de/) room. (A platform to watch online videos simultaneously).
-- Typing top 9 news from [Eksi Sozluk](https://eksisozluk.com/) (Reddit of Turkey) to the text channel.
 - Calculating the math in the identified syntax in sentences.
 
 ![mathwork](https://user-images.githubusercontent.com/73116832/106276405-96acb380-6248-11eb-9719-3e5c49102b61.png)
+Note: Any setting change is made sessionly. If you turn off the bot and then turn on the you are supposed to set the mroom and qroom again.
 ## How to use it? 
+- Prefix is : "
 - You can see commands with typing "help to chat.
-![help](https://user-images.githubusercontent.com/73116832/106276410-97dde080-6248-11eb-9a86-54821e0b43e6.png)
-## Invite link (If you will not host locally.)
-- You can invite bot directly via [Invite Link](https://discord.com/oauth2/authorize?client_id=802497711877521418&scope=bot&permissions=3226624).
 ## How to host it locally ?
 - Download latest version of JDK from oracle website.
 - Download maven from [here](https://maven.apache.org/).
@@ -33,7 +31,6 @@ This bot is a discord bot with ability to play songs, delete messages, setting m
  - To get clientId go to discord developer portal.
  - To calculate permission number go to bot section in the portal. or you can directly invite your bot as 
  - https://discord.com/oauth2/authorize?client_id=YOURCLİENTID&scope=bot (Dont forget to give permission to delete message.)
- 
 ## Used Libraries
 - Jsoup
 - HtmlUnit
