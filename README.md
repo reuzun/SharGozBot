@@ -10,6 +10,7 @@ This bot is a discord bot with ability to play songs, delete messages, setting m
 - Calculating the math in the identified syntax in sentences.
 
 ![mathwork](https://user-images.githubusercontent.com/73116832/106276405-96acb380-6248-11eb-9719-3e5c49102b61.png)
+
 Note: Any setting change is made sessionly. If you turn off the bot and then turn on the you are supposed to set the mroom and qroom again.
 ## How to use it? 
 - Prefix is : "
@@ -23,6 +24,7 @@ Note: Any setting change is made sessionly. If you turn off the bot and then tur
 - Open cmd --> write cd PATH_TO_SharGozBot --> write mvn clean package
 - Then edit your RunBot.bat file.
 - Double click to RunBot.bat file to start the SharGozBot.
+
 **Note : Make sure the Path environments of windows about Maven and JDK is correct.**
  ###  Alternative Way (Works for ubuntu users as well)
  - you can type  java -jar Location_To_SharGozBot.jar "Token_Here" to CMD or Terminal.
