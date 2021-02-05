@@ -11,7 +11,8 @@ This bot is a discord bot with ability to play songs, delete messages, setting m
 
 ![mathwork](https://user-images.githubusercontent.com/73116832/106276405-96acb380-6248-11eb-9719-3e5c49102b61.png)
 
-Note: Any setting change is made sessionly. If you turn off the bot and then turn on the you are supposed to set the mroom and qroom again.
+Note: qroom setting is done sessionly. If you turn off the bot you are supposed to set it again.
+Note: mroom is storaged locally in channels.txt. It is important to let channels.txt and shargozbot.jar in the same folder.
 ## How to use it? 
 - Prefix is : "
 - You can see commands with typing "help to chat.
