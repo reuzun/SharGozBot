@@ -1,5 +1,5 @@
 
-# SharGozBot :smile: [Invite](https://discord.com/oauth2/authorize?client_id=802497711877521418&scope=bot&permissions=3226624)
+# SharGozBot :smile:
 This bot is a discord bot with ability to play songs, delete messages, setting music, quote rooms. The more detailed properties are listed below :
 - Play music on a voice channel with keywords or links (It supports live streams via youtube just works with links not keywords.)
 - Can list musics that added. Last added song plays first.
